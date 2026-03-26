@@ -37,8 +37,18 @@ Open `http://localhost:3000`.
 
 If env vars are missing, the running page shows a fallback state.
 
+## GitHub
+
+Remote: `https://github.com/DHyukjuK/personal-website` (branch `main`).
+
 ## Deployment (Vercel)
 
-1. Import this repo into Vercel.
-2. Add Strava environment variables in project settings.
-3. Deploy.
+1. Sign in at [vercel.com](https://vercel.com) (GitHub login is easiest).
+2. **Add New… → Project** → import **`DHyukjuK/personal-website`**.
+3. Framework defaults (Next.js) are fine. Click **Deploy**.
+4. After the first deploy, open **Project → Settings → Environment Variables** and add the same keys as `.env.example` (production + preview if you want):
+   - `STRAVA_*` (if you use `/running`)
+   - `SPOTIFY_*` (if you use the home “now playing” block)
+5. Redeploy from the **Deployments** tab so new env vars apply.
+
+Optional: install globally with `npm i -g vercel`, then from this folder run `vercel` and follow the prompts to link the repo.
