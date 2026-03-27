@@ -4,8 +4,8 @@ import { SocialLinks } from "@/components/home/social-links";
 
 export function Hero() {
   return (
-    <section className="grid gap-12 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.65fr)] md:items-start md:gap-16 lg:gap-24">
-      <div className="animate-fade-in space-y-8 md:pt-1">
+    <section className="grid gap-12 md:grid-cols-[minmax(0,1.2fr)_auto] md:items-start md:gap-16 lg:gap-24">
+      <div className="min-w-0 animate-fade-in space-y-8 md:pt-1">
         <div className="space-y-2">
           <p className="text-[0.625rem] font-medium uppercase tracking-[0.2em] text-muted-foreground">
             {siteConfig.tagline}
@@ -22,12 +22,13 @@ export function Hero() {
         </p>
         <SocialLinks />
       </div>
-      <div className="animate-fade-in-delayed md:justify-self-end">
-        <figure className="group relative mx-auto aspect-[3/4] w-full max-w-[11rem] overflow-hidden rounded-md border border-foreground/10 bg-muted/40 md:mx-0 md:max-w-[13rem]">
+      <div className="animate-fade-in-delayed shrink-0 md:justify-self-end">
+        <figure className="group relative mx-auto aspect-[3/4] w-[11rem] overflow-hidden rounded-md border border-foreground/10 bg-muted/40 md:mx-0 md:w-[13rem]">
           <Image
             src="/images/profile.png"
             alt="David H. Kwon"
             fill
+            sizes="(min-width: 768px) 13rem, 11rem"
             priority
             className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
           />

@@ -2,23 +2,15 @@ import Link from "next/link";
 import { courseGroups, princetonOverview } from "@/content/academics/data";
 import { siteConfig } from "@/config/site";
 import { Container } from "@/components/ui/container";
-import { cn } from "@/lib/utils";
 
 export const metadata = {
   title: "Academics"
 };
 
-function staggerClass(i: number) {
-  const offsets = ["ml-0", "md:ml-8", "md:ml-4", "md:ml-14", "md:ml-6", "md:ml-10"];
-  return offsets[i % offsets.length];
-}
-
 const linkClass =
   "text-orange-600 underline decoration-orange-600/30 underline-offset-[3px] transition-colors hover:text-orange-700 hover:decoration-orange-700/50 dark:text-orange-400 dark:decoration-orange-400/40 dark:hover:text-orange-300";
 
 export default function AcademicsPage() {
-  let courseIndex = 0;
-
   return (
     <Container className="max-w-2xl py-14 lowercase md:py-20">
       <header className="space-y-2">
@@ -65,27 +57,19 @@ export default function AcademicsPage() {
               {group.label}
             </h3>
             <ul className="space-y-3">
-              {group.courses.map((c) => {
-                const i = courseIndex++;
-                return (
-                  <li
-                    key={c.code}
-                    className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[0.9375rem]"
-                  >
-                    <span className="font-semibold text-foreground">
-                      {c.code.toLowerCase()}
-                    </span>
-                    <span
-                      className={cn(
-                        "italic text-muted-foreground",
-                        staggerClass(i)
-                      )}
-                    >
-                      {c.title.toLowerCase()}
-                    </span>
-                  </li>
-                );
-              })}
+              {group.courses.map((c) => (
+                <li
+                  key={c.code}
+                  className="grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-3 gap-y-1 text-[0.9375rem]"
+                >
+                  <span className="font-semibold text-foreground">
+                    {c.code.toLowerCase()}
+                  </span>
+                  <span className="min-w-0 italic text-muted-foreground">
+                    {c.title.toLowerCase()}
+                  </span>
+                </li>
+              ))}
             </ul>
           </div>
         ))}
