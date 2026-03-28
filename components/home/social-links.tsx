@@ -31,6 +31,12 @@ export function SocialLinks() {
       >
         YouTube
       </Link>
+      <Link
+        href={`mailto:${siteConfig.links.email}`}
+        className={linkClass}
+      >
+        email
+      </Link>
     </div>
   );
 }

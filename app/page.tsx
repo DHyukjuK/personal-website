@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 const focusAreas = [
   {
     title: "Projects",
-    description: "Things I'm building or tinkering with.",
+    description: "Side projects and things I'm tinkering with.",
     href: "/projects"
   },
   {
@@ -19,8 +19,7 @@ const focusAreas = [
   },
   {
     title: "Running & other interests",
-    description:
-      "Running more lately, and exploring golf, dance, and reading.",
+    description: "More running lately, plus golf, dance, and reading.",
     href: "/running"
   }
 ] as const;
@@ -41,8 +40,7 @@ export default function HomePage() {
                 focus.
               </h2>
               <p className="max-w-md text-[0.8125rem] leading-relaxed text-muted-foreground md:text-right">
-                Current areas of focus across academics, creative work, and
-                long-term training.
+                A short list of what I&apos;m focused on.
               </p>
             </div>
           </RevealOnView>
@@ -77,21 +75,20 @@ export default function HomePage() {
         </section>
         <RevealOnView delayMs={60}>
           <p className="border-t border-foreground/10 pt-12 text-[0.8125rem] leading-relaxed text-muted-foreground md:pt-16">
-            Start exploring through{" "}
             <Link
               href="/projects"
               className="text-foreground underline decoration-foreground/20 underline-offset-[5px] transition-colors duration-200 hover:decoration-foreground/40"
             >
               projects
-            </Link>{" "}
-            or recent{" "}
+            </Link>
+            ,{" "}
             <Link
               href="/blog"
               className="text-foreground underline decoration-foreground/20 underline-offset-[5px] transition-colors duration-200 hover:decoration-foreground/40"
             >
               writing
             </Link>
-            .
+            , or whatever you came for.
           </p>
         </RevealOnView>
       </Container>

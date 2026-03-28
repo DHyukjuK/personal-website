@@ -7,14 +7,17 @@ export const siteConfig = {
   tagline:
     "Princeton University · Operations Research & Financial Engineering · 2027",
   location: "Los Angeles, California",
-  bio: "I made this site for fun. I'm at Princeton studying ORFE and graduating in 2027. I'm from Los Angeles. I still miss the California sunshine, and I'm slowly getting used to the East Coast. I play piano, clarinet, and violin, and I spend time on personal projects outside class. I've been running more lately, along with golf, dance, and reading.",
+  bio:
+    "I built this site for fun. I'm a student at Princeton studying Operations Research and Financial Engineering, graduating in 2027. I'm from Los Angeles. I miss the California sunshine, but I'm slowly starting to love the East Coast too, and I love exploring New York City. Outside of schoolwork I play piano, clarinet, and violin, and I work on random side projects. Recently I've been getting a lot more into running. I wish I could dance. I still love watching and imitating K-pop dances. This past year I got into golf as well. I enjoy TV shows, movies, anime, all of that. I've been enjoying reading and want to start writing more, which is part of why I made this site, including the blog.",
   /** Shown next to music / YouTube mentions */
   youtubeNote:
     "Most uploads are from high school; I'm not sure how often I'll add new recordings going forward.",
   links: {
     github: "https://github.com/DHyukjuK",
     linkedin: "https://www.linkedin.com/in/davidhyukjukwon/",
-    youtube: "https://www.youtube.com/@dadvidkwon"
+    youtube: "https://www.youtube.com/@dadvidkwon",
+    /** Plain address; use mailto: in links */
+    email: "davidhyukju@gmail.com"
   },
   nav: [
     { href: "/", label: "Home" },

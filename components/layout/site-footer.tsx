@@ -34,6 +34,12 @@ export function SiteFooter() {
           >
             YouTube
           </Link>
+          <Link
+            href={`mailto:${siteConfig.links.email}`}
+            className="transition-colors duration-200 hover:text-foreground"
+          >
+            email
+          </Link>
         </div>
       </Container>
     </footer>
