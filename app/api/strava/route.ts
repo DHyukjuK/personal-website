@@ -1,15 +1,22 @@
 import { NextResponse } from "next/server";
-import { getStravaDashboard } from "@/lib/strava";
+import { getStravaDashboardState } from "@/lib/strava";
 
 export async function GET() {
-  const dashboard = await getStravaDashboard();
+  const state = await getStravaDashboardState();
 
-  if (!dashboard) {
+  if (!state.ok) {
     return NextResponse.json(
-      { error: "Strava data unavailable." },
+      {
+        error: "Strava data unavailable.",
+        issue: state.issue,
+        ...(state.missingEnvKeys?.length
+          ? { missingEnvKeys: state.missingEnvKeys }
+          : {}),
+        ...(state.stravaStatus != null ? { stravaStatus: state.stravaStatus } : {})
+      },
       { status: 503 }
     );
   }
 
-  return NextResponse.json(dashboard);
+  return NextResponse.json(state.dashboard);
 }

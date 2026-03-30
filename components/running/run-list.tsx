@@ -12,7 +12,9 @@ export function RunList({ runs }: RunListProps) {
     return (
       <Card>
         <p className="text-sm text-muted-foreground">
-          No runs available yet. Connect Strava to load activity.
+          No recent run activities in this list (outdoor runs, virtual runs, and
+          trail runs). Other Strava types won’t appear here—log an outdoor or
+          virtual run, or check back after your next run.
         </p>
       </Card>
     );
