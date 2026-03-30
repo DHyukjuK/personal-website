@@ -10,6 +10,8 @@ export async function GET() {
       {
         configured: false,
         listening: null,
+        topTracks: [],
+        topArtists: [],
         issue: "server_error" as const
       },
       { status: 503 }

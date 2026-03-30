@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { DustField } from "@/components/home/dust-field";
 import { Hero } from "@/components/home/hero";
-import { NowPlaying } from "@/components/home/now-playing";
+import { SpotifySection } from "@/components/home/spotify-section";
 import { RevealOnView } from "@/components/home/reveal-on-view";
 import { Container } from "@/components/ui/container";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,7 @@ export default function HomePage() {
       <Container className="relative z-[2] space-y-24 py-16 md:space-y-32 md:py-24">
         <div className="space-y-12 md:space-y-16">
           <Hero />
-          <NowPlaying />
+          <SpotifySection />
         </div>
         <section className="border-t border-foreground/10 pt-16 md:pt-20">
           <RevealOnView>
