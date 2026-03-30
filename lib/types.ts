@@ -17,7 +17,7 @@ export type Recording = {
   year: number;
   description: string;
   embedType: "audio" | "video";
-  /** YouTube embed (`/embed/VIDEO_ID`). Omit when the recording is not published yet. */
+  /** YouTube embed (`/embed/VIDEO_ID`). Omit if the recording is not published yet. */
   embedUrl?: string;
   /** Optional “watch on YouTube” URL */
   watchUrl?: string;
@@ -40,14 +40,33 @@ export type RunSummary = {
   id: string;
   name: string;
   date: string;
-  distanceKm: number;
+  distanceMiles: number;
   movingTimeSeconds: number;
-  pacePerKmSeconds: number;
+  pacePerMileSeconds: number;
+};
+
+export type WeeklyMileageBin = {
+  /** Short label for the week (e.g. start date) */
+  label: string;
+  miles: number;
+};
+
+export type RunHighlights = {
+  longest: RunSummary;
+  fastest: RunSummary;
+  latest: RunSummary;
 };
 
 export type StravaDashboard = {
-  totalDistanceKm: number;
-  averagePacePerKmSeconds: number;
+  /** Miles across all runs in this snapshot (recent activities from Strava). */
+  totalDistanceMiles: number;
+  averagePacePerMileSeconds: number;
   runCount: number;
+  milesThisMonth: number;
+  /** Mean miles per distinct calendar week represented in the snapshot. */
+  avgWeeklyMiles: number;
+  weeklyMileage: WeeklyMileageBin[];
+  highlights: RunHighlights | null;
+  /** Most recent runs for the list (capped). */
   recentRuns: RunSummary[];
 };

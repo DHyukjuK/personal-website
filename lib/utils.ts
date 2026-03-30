@@ -12,3 +12,15 @@ export function formatPace(secondsPerKm: number) {
     .padStart(2, "0");
   return `${minutes}:${seconds} /km`;
 }
+
+/** Minutes:seconds per mile (running). */
+export function formatPacePerMile(secondsPerMile: number) {
+  if (!Number.isFinite(secondsPerMile) || secondsPerMile <= 0) {
+    return "—";
+  }
+  const minutes = Math.floor(secondsPerMile / 60);
+  const seconds = Math.round(secondsPerMile % 60)
+    .toString()
+    .padStart(2, "0");
+  return `${minutes}:${seconds} /mi`;
+}

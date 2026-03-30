@@ -1,7 +1,10 @@
+import Link from "next/link";
 import { Container } from "@/components/ui/container";
 import { Section } from "@/components/ui/section";
-import { StatsCards } from "@/components/running/stats-cards";
-import { RunList } from "@/components/running/run-list";
+import { RecentRuns } from "@/components/running/recent-runs";
+import { RunHighlights } from "@/components/running/run-highlights";
+import { SummaryCards } from "@/components/running/summary-cards";
+import { WeeklyMileage } from "@/components/running/weekly-mileage";
 import {
   getStravaDashboardState,
   type StravaLoadIssue
@@ -10,6 +13,8 @@ import {
 export const metadata = {
   title: "Running"
 };
+
+const STRAVA_PROFILE = "https://www.strava.com/athletes/104430354";
 
 const issueHint: Record<StravaLoadIssue, string> = {
   missing_env:
@@ -26,15 +31,38 @@ export default async function RunningPage() {
   const state = await getStravaDashboardState();
 
   return (
-    <Container className="space-y-10 py-12">
+    <Container className="space-y-16 py-12 md:space-y-20 md:py-16">
       <Section
         title="Running"
-        description="Recent Strava activity and lightweight summary statistics."
+        description="A quiet snapshot of how I’ve been running lately—rhythm and consistency more than a full activity feed."
       >
         {state.ok ? (
-          <div className="space-y-6">
-            <StatsCards stats={state.dashboard} />
-            <RunList runs={state.dashboard.recentRuns} />
+          <div className="space-y-14 md:space-y-16">
+            <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
+              <Link
+                href={STRAVA_PROFILE}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-foreground underline decoration-foreground/15 underline-offset-[5px] transition-colors hover:decoration-foreground/35"
+              >
+                See more on Strava
+              </Link>
+              <span className="text-muted-foreground">
+                {" "}
+                for routes, full history, and the rest of what doesn’t belong on
+                this page.
+              </span>
+            </p>
+
+            <SummaryCards stats={state.dashboard} />
+
+            <WeeklyMileage bins={state.dashboard.weeklyMileage} />
+
+            {state.dashboard.highlights ? (
+              <RunHighlights highlights={state.dashboard.highlights} />
+            ) : null}
+
+            <RecentRuns runs={state.dashboard.recentRuns} />
           </div>
         ) : (
           <div className="space-y-3 rounded-xl border border-dashed border-border p-8 text-sm text-muted-foreground">

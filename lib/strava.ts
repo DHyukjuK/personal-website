@@ -1,4 +1,16 @@
-import type { RunSummary, StravaDashboard } from "@/lib/types";
+import type {
+  RunHighlights,
+  RunSummary,
+  StravaDashboard,
+  WeeklyMileageBin
+} from "@/lib/types";
+import {
+  endOfWeek,
+  format,
+  parseISO,
+  startOfWeek,
+  subWeeks
+} from "date-fns";
 
 const STRAVA_TOKEN_URL = "https://www.strava.com/oauth/token";
 const STRAVA_ACTIVITIES_URL = "https://www.strava.com/api/v3/athlete/activities";
@@ -8,6 +20,9 @@ const STRAVA_ENV_KEYS = [
   "STRAVA_CLIENT_SECRET",
   "STRAVA_REFRESH_TOKEN"
 ] as const;
+
+/** Strava returns distance in meters; convert to statute miles. */
+const METERS_TO_MI = 0.000621371192;
 
 /** Strava summary activity types we treat as “runs” for this page. */
 const RUN_ACTIVITY_TYPES = new Set([
@@ -34,35 +49,95 @@ function isRunActivity(type: string): boolean {
 }
 
 function toRunSummary(activity: StravaActivity): RunSummary {
-  const distanceKm = activity.distance / 1000;
+  const distanceMiles = activity.distance * METERS_TO_MI;
   return {
     id: String(activity.id),
     name: activity.name,
     date: activity.start_date_local,
-    distanceKm,
+    distanceMiles,
     movingTimeSeconds: activity.moving_time,
-    pacePerKmSeconds: activity.moving_time / Math.max(distanceKm, 1)
+    pacePerMileSeconds:
+      activity.moving_time / Math.max(distanceMiles, 0.01)
   };
+}
+
+function buildWeeklyMileage(runs: RunSummary[]): WeeklyMileageBin[] {
+  const now = new Date();
+  const bins: WeeklyMileageBin[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const weekStart = startOfWeek(subWeeks(now, i), { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+    const miles = runs
+      .filter((r) => {
+        const d = parseISO(r.date);
+        return d >= weekStart && d <= weekEnd;
+      })
+      .reduce((s, r) => s + r.distanceMiles, 0);
+    bins.push({ label: format(weekStart, "MMM d"), miles });
+  }
+  return bins;
 }
 
 function summarizeRuns(runs: RunSummary[]): StravaDashboard {
   if (runs.length === 0) {
     return {
-      totalDistanceKm: 0,
-      averagePacePerKmSeconds: 0,
+      totalDistanceMiles: 0,
+      averagePacePerMileSeconds: 0,
       runCount: 0,
+      milesThisMonth: 0,
+      avgWeeklyMiles: 0,
+      weeklyMileage: buildWeeklyMileage([]),
+      highlights: null,
       recentRuns: []
     };
   }
 
-  const totalDistanceKm = runs.reduce((acc, run) => acc + run.distanceKm, 0);
-  const totalMoving = runs.reduce((acc, run) => acc + run.movingTimeSeconds, 0);
+  const sorted = [...runs].sort(
+    (a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()
+  );
+
+  const totalDistanceMiles = runs.reduce((acc, r) => acc + r.distanceMiles, 0);
+  const totalMoving = runs.reduce((acc, r) => acc + r.movingTimeSeconds, 0);
+  const averagePacePerMileSeconds =
+    totalMoving / Math.max(totalDistanceMiles, 0.01);
+
+  const now = new Date();
+  const milesThisMonth = runs.reduce((acc, r) => {
+    const d = parseISO(r.date);
+    if (
+      d.getMonth() === now.getMonth() &&
+      d.getFullYear() === now.getFullYear()
+    ) {
+      return acc + r.distanceMiles;
+    }
+    return acc;
+  }, 0);
+
+  const weekStarts = runs.map((r) =>
+    startOfWeek(parseISO(r.date), { weekStartsOn: 1 }).getTime()
+  );
+  const distinctWeeks = new Set(weekStarts).size;
+  const avgWeeklyMiles = totalDistanceMiles / Math.max(distinctWeeks, 1);
+
+  const longest = runs.reduce((a, b) =>
+    a.distanceMiles >= b.distanceMiles ? a : b
+  );
+  const fastest = runs.reduce((a, b) =>
+    a.pacePerMileSeconds <= b.pacePerMileSeconds ? a : b
+  );
+  const latest = sorted[0]!;
+
+  const highlights: RunHighlights = { longest, fastest, latest };
 
   return {
-    totalDistanceKm,
-    averagePacePerKmSeconds: totalMoving / Math.max(totalDistanceKm, 1),
+    totalDistanceMiles,
+    averagePacePerMileSeconds,
     runCount: runs.length,
-    recentRuns: runs
+    milesThisMonth,
+    avgWeeklyMiles,
+    weeklyMileage: buildWeeklyMileage(runs),
+    highlights,
+    recentRuns: sorted.slice(0, 6)
   };
 }
 
@@ -127,7 +202,7 @@ export async function getStravaDashboardState(): Promise<StravaDashboardState> {
     return { ok: false, issue: "token_refresh_failed", stravaStatus: tokenRes.status };
   }
 
-  const activitiesRes = await fetch(`${STRAVA_ACTIVITIES_URL}?per_page=30`, {
+  const activitiesRes = await fetch(`${STRAVA_ACTIVITIES_URL}?per_page=80`, {
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: "no-store"
   });
