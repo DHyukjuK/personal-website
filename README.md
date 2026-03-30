@@ -41,6 +41,13 @@ If env vars are missing, the running page shows a fallback state.
 
 Remote: `https://github.com/DHyukjuK/personal-website` (branch `main`).
 
+## Secrets and security
+
+- **Never commit** `.env`, `.env.local`, or any file that contains real keys. This repo’s `.gitignore` already excludes them; keep `.env.example` as placeholders only.
+- **Store secrets only** in Vercel **Project → Settings → Environment Variables** (Production / Preview) or in local `.env.local`. `SPOTIFY_*` and `STRAVA_*` are read **only on the server** (`lib/spotify.ts`, `lib/strava.ts`); API routes return **public data** (track title, links), not your client secret or refresh token.
+- **Do not** paste Client Secret, refresh tokens, or `.env` contents into chats, screenshots, or issues. If a secret is ever exposed, **rotate it** in the provider dashboard (Spotify: “Rotate client secret”) and update Vercel + `.env.local`.
+- **Spotify “Development mode”:** add your own Spotify account under **User Management** on the app so “now playing” works for your user.
+
 ## Deployment (Vercel)
 
 1. Sign in at [vercel.com](https://vercel.com) (GitHub login is easiest).

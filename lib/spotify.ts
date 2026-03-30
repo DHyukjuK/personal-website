@@ -18,16 +18,16 @@ export type SpotifyListening = {
 
 function spotifyConfigured(): boolean {
   return Boolean(
-    process.env.SPOTIFY_CLIENT_ID &&
-      process.env.SPOTIFY_CLIENT_SECRET &&
-      process.env.SPOTIFY_REFRESH_TOKEN
+    process.env.SPOTIFY_CLIENT_ID?.trim() &&
+      process.env.SPOTIFY_CLIENT_SECRET?.trim() &&
+      process.env.SPOTIFY_REFRESH_TOKEN?.trim()
   );
 }
 
 async function getAccessToken(): Promise<string | null> {
-  const clientId = process.env.SPOTIFY_CLIENT_ID;
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
+  const clientId = process.env.SPOTIFY_CLIENT_ID?.trim();
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET?.trim();
+  const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN?.trim();
   if (!clientId || !clientSecret || !refreshToken) return null;
 
   const res = await fetch("https://accounts.spotify.com/api/token", {
@@ -62,17 +62,24 @@ function mapTrack(track: SpotifyTrack): Omit<SpotifyListening, "isPlaying"> {
   };
 }
 
+export type SpotifyIssue =
+  | "missing_env"
+  | "refresh_failed"
+  | "api_error"
+  | "no_tracks";
+
 export async function getSpotifyListening(): Promise<{
   configured: boolean;
   listening: SpotifyListening | null;
+  issue?: SpotifyIssue;
 }> {
   if (!spotifyConfigured()) {
-    return { configured: false, listening: null };
+    return { configured: false, listening: null, issue: "missing_env" };
   }
 
   const accessToken = await getAccessToken();
   if (!accessToken) {
-    return { configured: true, listening: null };
+    return { configured: true, listening: null, issue: "refresh_failed" };
   }
 
   const headers = { Authorization: `Bearer ${accessToken}` };
@@ -103,14 +110,14 @@ export async function getSpotifyListening(): Promise<{
     { headers, cache: "no-store" }
   );
   if (!recent.ok) {
-    return { configured: true, listening: null };
+    return { configured: true, listening: null, issue: "api_error" };
   }
   const recentData = (await recent.json()) as {
     items?: { track: SpotifyTrack }[];
   };
   const track = recentData.items?.[0]?.track;
   if (!track) {
-    return { configured: true, listening: null };
+    return { configured: true, listening: null, issue: "no_tracks" };
   }
   return {
     configured: true,
