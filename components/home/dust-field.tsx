@@ -38,7 +38,7 @@ export function DustField() {
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    setActive(true);
+    queueMicrotask(() => setActive(true));
   }, []);
 
   useEffect(() => {
