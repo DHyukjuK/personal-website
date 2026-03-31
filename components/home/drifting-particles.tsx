@@ -27,9 +27,9 @@ interface Particle {
 }
 
 const LAYER_CONFIG = {
-  [Layer.Far]:  { count: 16, rMin: 0.8, rMax: 1.5, speed: 0.10, opLight: 0.55, opDark: 0.20 },
-  [Layer.Mid]:  { count: 18, rMin: 1.4, rMax: 2.2, speed: 0.14, opLight: 0.65, opDark: 0.30 },
-  [Layer.Near]: { count: 10, rMin: 2.0, rMax: 3.0, speed: 0.09, opLight: 0.70, opDark: 0.40 }
+  [Layer.Far]:  { count: 16, rMin: 0.8, rMax: 1.5, speed: 0.18, opLight: 0.18, opDark: 0.16 },
+  [Layer.Mid]:  { count: 18, rMin: 1.4, rMax: 2.2, speed: 0.24, opLight: 0.24, opDark: 0.24 },
+  [Layer.Near]: { count: 10, rMin: 2.0, rMax: 3.0, speed: 0.15, opLight: 0.28, opDark: 0.32 }
 } as const;
 
 const CONNECTION_DIST = 160;
@@ -119,10 +119,15 @@ export function DriftingParticles() {
     document.addEventListener("mouseleave", onLeave);
 
     let raf = 0;
-    let frame = 0;
+    let lastTime = 0;
+    let elapsed = 0;
 
-    const tick = () => {
-      frame++;
+    const tick = (now: number) => {
+      const rawDt = lastTime ? (now - lastTime) / 1000 : 1 / 60;
+      lastTime = now;
+      const dt = Math.min(rawDt, 0.1) * 60;
+      elapsed += rawDt;
+
       ctx.clearRect(0, 0, w, h);
 
       const dark = isDark();
@@ -131,10 +136,10 @@ export function DriftingParticles() {
         p.connections = 0;
 
         if (!reducedMotion) {
-          p.angle += p.turnRate + Math.sin(frame * p.wobbleFreq + p.wobblePhase) * 0.005;
+          p.angle += (p.turnRate + Math.sin(elapsed * p.wobbleFreq * 60 + p.wobblePhase) * 0.005) * dt;
 
-          const tx = Math.cos(p.angle) * p.speed;
-          const ty = Math.sin(p.angle) * p.speed;
+          const tx = Math.cos(p.angle) * p.speed * dt;
+          const ty = Math.sin(p.angle) * p.speed * dt;
 
           p.x += tx;
           p.y += ty;
@@ -144,7 +149,7 @@ export function DriftingParticles() {
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < CURSOR_RADIUS && dist > 0) {
             const t = (CURSOR_RADIUS - dist) / CURSOR_RADIUS;
-            const force = t * t * CURSOR_PUSH;
+            const force = t * t * CURSOR_PUSH * dt;
             p.x += (dx / dist) * force;
             p.y += (dy / dist) * force;
           }
@@ -171,44 +176,44 @@ export function DriftingParticles() {
           if (distSq < CONNECTION_DIST * CONNECTION_DIST) {
             const dist = Math.sqrt(distSq);
             const fade = 1 - dist / CONNECTION_DIST;
-            const strength = fade * fade;
+            const strength = fade * (0.4 + fade * 0.6);
 
             a.connections++;
             b.connections++;
 
             if (dark) {
-              const coreOp = strength * 0.12;
-              const glowOp = strength * 0.04;
+              const coreOp = strength * 0.4;
+              const glowOp = strength * 0.14;
 
               ctx.beginPath();
               ctx.moveTo(a.x, a.y);
               ctx.lineTo(b.x, b.y);
-              ctx.strokeStyle = `rgba(150, 180, 220, ${glowOp})`;
-              ctx.lineWidth = 2.5;
+              ctx.strokeStyle = `rgba(150, 180, 225, ${glowOp})`;
+              ctx.lineWidth = 3.5;
               ctx.stroke();
 
               ctx.beginPath();
               ctx.moveTo(a.x, a.y);
               ctx.lineTo(b.x, b.y);
-              ctx.strokeStyle = `rgba(170, 195, 235, ${coreOp})`;
-              ctx.lineWidth = 0.5;
+              ctx.strokeStyle = `rgba(175, 200, 240, ${coreOp})`;
+              ctx.lineWidth = 0.8;
               ctx.stroke();
             } else {
-              const coreOp = strength * 0.2;
-              const glowOp = strength * 0.06;
+              const coreOp = strength * 0.32;
+              const glowOp = strength * 0.10;
 
               ctx.beginPath();
               ctx.moveTo(a.x, a.y);
               ctx.lineTo(b.x, b.y);
               ctx.strokeStyle = `rgba(10, 20, 50, ${glowOp})`;
-              ctx.lineWidth = 2.5;
+              ctx.lineWidth = 3;
               ctx.stroke();
 
               ctx.beginPath();
               ctx.moveTo(a.x, a.y);
               ctx.lineTo(b.x, b.y);
               ctx.strokeStyle = `rgba(15, 25, 45, ${coreOp})`;
-              ctx.lineWidth = 0.7;
+              ctx.lineWidth = 0.8;
               ctx.stroke();
             }
           }
@@ -254,7 +259,7 @@ export function DriftingParticles() {
       raf = requestAnimationFrame(tick);
     };
 
-    raf = requestAnimationFrame(tick);
+    raf = requestAnimationFrame((t) => tick(t));
     window.addEventListener("resize", resize, { passive: true });
 
     return () => {
