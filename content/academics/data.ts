@@ -1,6 +1,5 @@
 /**
  * Courses grouped for display; edit as you register for new ones.
- * High school kept light on purpose.
  */
 
 export const princetonOverview = {
@@ -16,12 +15,14 @@ export type CourseEntry = {
 
 export type CourseGroup = {
   label: string;
+  accent: string;
   courses: CourseEntry[];
 };
 
 export const courseGroups: CourseGroup[] = [
   {
-    label: "orfe, stats & ml",
+    label: "orfe, stats, & ml",
+    accent: "sky",
     courses: [
       { code: "ORF245", title: "Fundamentals of Statistics" },
       { code: "ORF307", title: "Optimization" },
@@ -35,13 +36,16 @@ export const courseGroups: CourseGroup[] = [
   },
   {
     label: "cs & machine learning",
+    accent: "violet",
     courses: [
+      { code: "COS126", title: "Computer Science: An Interdisciplinary Approach" },
       { code: "COS226", title: "Algorithms and Data Structures" },
       { code: "COS324", title: "Introduction to Machine Learning" }
     ]
   },
   {
-    label: "math, physics & engineering",
+    label: "math, physics, & engineering",
+    accent: "teal",
     courses: [
       { code: "MAT201", title: "Multivariable Calculus" },
       { code: "MAT202", title: "Linear Algebra" },
@@ -50,15 +54,34 @@ export const courseGroups: CourseGroup[] = [
     ]
   },
   {
-    label: "econ & other",
+    label: "econ & finance",
+    accent: "amber",
     courses: [
       { code: "ECO101", title: "Macroeconomics" },
       { code: "ECO332", title: "Economics of Health and Health Care" },
       { code: "ECO362", title: "Financial Investments" },
-      { code: "NEU200", title: "Functional Neuroanatomy" },
-      { code: "PSY360", title: "Computational Models of Cognition" },
       { code: "ECE473", title: "Elements of Decentralized Finance" }
+    ]
+  },
+  {
+    label: "psychology & neuroscience",
+    accent: "rose",
+    courses: [
+      { code: "NEU200", title: "Functional Neuroanatomy" },
+      { code: "PSY254", title: "Developmental Psychology" },
+      { code: "PSY360", title: "Computational Models of Cognition" },
+      { code: "MUS248", title: "Music Cognition" }
+    ]
+  },
+  {
+    label: "everything else",
+    accent: "slate",
+    courses: [
+      { code: "JPN1001", title: "Introductory Japanese 1" },
+      { code: "MPP213", title: "Projects in Instrumental Performance: Chamber Music" },
+      { code: "PHI202", title: "Introduction to Moral Philosophy" },
+      { code: "POL396", title: "International Organizations" },
+      { code: "WRI112", title: "The Craft of Authenticity" }
     ]
   }
 ];
-
