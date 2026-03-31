@@ -18,7 +18,8 @@ export function RecentRuns({ runs }: { runs: RunSummary[] }) {
         Recent runs
       </p>
       <p className="mt-1 max-w-prose text-sm text-muted-foreground">
-        The latest handful from Strava—titles and pacing as I logged them.
+        The latest handful from Strava, with titles and pacing the way I logged
+        them.
       </p>
       <div className="mt-5 divide-y divide-border/80 rounded-xl border border-border/80">
         {runs.map((run) => (

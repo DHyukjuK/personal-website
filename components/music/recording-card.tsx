@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
+
 import { MediaEmbed } from "@/components/music/media-embed";
 import type { Recording } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -8,59 +8,61 @@ type RecordingCardProps = {
   recording: Recording;
 };
 
+/**
+ * Uniform performance card for the music page grid.
+ */
 export function RecordingCard({ recording }: RecordingCardProps) {
   return (
-    <Card
+    <article
       className={cn(
-        "space-y-4",
-        recording.featured &&
-          "border-foreground/20 bg-muted/20 md:col-span-2 md:p-8 md:py-8"
+        "flex h-full flex-col gap-4 rounded-2xl border border-foreground/[0.08] bg-background/50 p-5 md:gap-5 md:p-6",
+        "dark:border-white/[0.08] dark:bg-background/30"
       )}
     >
-      <div className="space-y-1">
-        {recording.featured ? (
-          <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-            Featured
-          </p>
-        ) : null}
-        <h3 className="font-sans text-lg font-semibold tracking-tight text-foreground md:text-xl">
+      <header className="space-y-2">
+        <h3 className="font-sans text-base font-semibold leading-snug tracking-tight text-foreground md:text-[1.0625rem]">
           {recording.title}
         </h3>
         {recording.context ? (
-          <p className="text-[11px] leading-snug text-muted-foreground">
+          <p className="text-[0.6875rem] leading-relaxed text-muted-foreground md:text-[0.7rem]">
             {recording.context}
           </p>
         ) : (
-          <p className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
+          <p className="text-[0.6875rem] uppercase tracking-[0.12em] text-muted-foreground">
             {recording.instrument} · {recording.year}
           </p>
         )}
-      </div>
-      <p className="text-[0.9375rem] leading-relaxed text-muted-foreground">
+      </header>
+
+      <p className="flex-1 text-[0.875rem] leading-[1.65] text-muted-foreground md:text-[0.9375rem] md:leading-[1.7]">
         {recording.description}
       </p>
+
       {recording.embedUrl ? (
-        <>
-          <MediaEmbed title={recording.title} url={recording.embedUrl} />
+        <div className="space-y-3">
+          <MediaEmbed
+            title={recording.title}
+            url={recording.embedUrl}
+            frame="minimal"
+          />
           {recording.watchUrl ? (
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[0.6875rem] text-muted-foreground">
               <Link
                 href={recording.watchUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-foreground underline decoration-foreground/20 underline-offset-[4px] transition-colors hover:decoration-foreground/40"
+                className="text-foreground/80 underline decoration-foreground/15 underline-offset-[3px] transition-colors hover:text-foreground hover:decoration-foreground/35"
               >
                 Open on YouTube
               </Link>
             </p>
           ) : null}
-        </>
+        </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-foreground/20 bg-background/50 px-4 py-8 text-center text-sm text-muted-foreground">
-          Performance link coming soon. I’ll drop the embed here when the video
-          is up.
+        <div className="rounded-xl bg-muted/25 px-4 py-10 text-center text-sm text-muted-foreground ring-1 ring-inset ring-foreground/[0.05]">
+          Video link coming soon. I’ll add the embed when it’s up.
         </div>
       )}
-    </Card>
+    </article>
   );
 }

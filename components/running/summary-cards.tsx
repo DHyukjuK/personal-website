@@ -44,8 +44,8 @@ export function SummaryCards({ stats }: { stats: StravaDashboard }) {
         ))}
       </div>
       <p className="text-[11px] leading-relaxed text-muted-foreground/90">
-        Totals and averages are from the latest activities pulled from Strava—not
-        lifetime stats.
+        Totals and averages are from the latest activities pulled from Strava,
+        not lifetime stats.
       </p>
     </div>
   );

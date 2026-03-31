@@ -12,6 +12,8 @@ export type Project = {
 };
 
 export type Recording = {
+  /** Stable key for lists and future CMS */
+  id: string;
   title: string;
   instrument: "Piano" | "Clarinet" | "Ensemble";
   year: number;
@@ -22,9 +24,7 @@ export type Recording = {
   /** Optional “watch on YouTube” URL */
   watchUrl?: string;
   duration?: string;
-  /** Full-width highlight at the top of the list */
-  featured?: boolean;
-  /** Short line under the title (e.g. venue, concert name) */
+  /** Short line under the title (ensemble, venue, program) */
   context?: string;
 };
 

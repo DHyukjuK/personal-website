@@ -32,3 +32,78 @@ body {
 body {
   @apply min-h-screen font-sans;
 }
+
+/**
+ * /music — soft violet “night window” wash (inspired by calm lo-fi refs),
+ * kept low-contrast so type stays readable in light and dark.
+ */
+.music-page-atmosphere {
+  background-color: hsl(270 18% 98%);
+  background-image:
+    radial-gradient(
+      ellipse 110% 75% at 50% -18%,
+      hsl(268 42% 92% / 0.95) 0%,
+      transparent 52%
+    ),
+    radial-gradient(
+      ellipse 60% 50% at 100% 28%,
+      hsl(285 38% 90% / 0.65) 0%,
+      transparent 48%
+    ),
+    radial-gradient(
+      ellipse 45% 40% at 0% 85%,
+      hsl(195 35% 92% / 0.4) 0%,
+      transparent 45%
+    );
+}
+
+.dark .music-page-atmosphere {
+  background-color: hsl(265 12% 6%);
+  background-image:
+    radial-gradient(
+      ellipse 100% 68% at 50% -12%,
+      hsl(265 45% 24% / 0.55) 0%,
+      transparent 56%
+    ),
+    radial-gradient(
+      ellipse 55% 42% at 95% 28%,
+      hsl(280 40% 20% / 0.42) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse 40% 38% at 5% 88%,
+      hsl(200 40% 18% / 0.22) 0%,
+      transparent 48%
+    );
+}
+
+/* Listening stack on /music — faint Spotify-green glow on the card stack */
+.music-listening-panel {
+  background-image:
+    radial-gradient(
+      ellipse 70% 45% at 100% 0%,
+      hsl(152 55% 42% / 0.07) 0%,
+      transparent 52%
+    ),
+    linear-gradient(
+      180deg,
+      hsl(var(--muted) / 0.5) 0%,
+      hsl(var(--background) / 0.96) 38%,
+      hsl(var(--background) / 0.9) 100%
+    );
+}
+
+.dark .music-listening-panel {
+  background-image:
+    radial-gradient(
+      ellipse 65% 40% at 100% 0%,
+      hsl(152 40% 36% / 0.12) 0%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      hsl(var(--muted) / 0.35) 0%,
+      hsl(var(--background) / 0.92) 45%,
+      hsl(var(--background) / 0.78) 100%
+    );
+}

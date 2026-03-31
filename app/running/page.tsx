@@ -34,7 +34,7 @@ export default async function RunningPage() {
     <Container className="space-y-16 py-12 md:space-y-20 md:py-16">
       <Section
         title="Running"
-        description="A quiet snapshot of how I’ve been running lately—rhythm and consistency more than a full activity feed."
+        description="A quiet snapshot of how I’ve been running lately, more about rhythm and consistency than mirroring my whole Strava feed."
       >
         {state.ok ? (
           <div className="space-y-14 md:space-y-16">
