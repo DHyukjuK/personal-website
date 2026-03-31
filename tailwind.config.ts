@@ -17,7 +17,8 @@ const config: Config = {
         foreground: "hsl(var(--foreground))",
         muted: "hsl(var(--muted))",
         "muted-foreground": "hsl(var(--muted-foreground))",
-        card: "hsl(var(--card))"
+        card: "hsl(var(--card))",
+        accent: "hsl(var(--accent))"
       },
       maxWidth: {
         prose: "74ch"
@@ -33,12 +34,12 @@ const config: Config = {
         "soft-out": "cubic-bezier(0.22, 1, 0.36, 1)"
       },
       animation: {
-        "fade-in": "fadeIn 640ms cubic-bezier(0.22, 1, 0.36, 1) both",
-        "fade-in-delayed": "fadeIn 640ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both"
+        "fade-in": "fadeIn 800ms cubic-bezier(0.22, 1, 0.36, 1) both",
+        "fade-in-delayed": "fadeIn 800ms cubic-bezier(0.22, 1, 0.36, 1) 180ms both"
       },
       keyframes: {
         fadeIn: {
-          from: { opacity: "0", transform: "translateY(4px)" },
+          from: { opacity: "0", transform: "translateY(5px)" },
           to: { opacity: "1", transform: "translateY(0)" }
         }
       }

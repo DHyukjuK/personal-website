@@ -8,7 +8,7 @@ export const metadata = {
 };
 
 const linkClass =
-  "text-orange-600 underline decoration-orange-600/30 underline-offset-[3px] transition-colors hover:text-orange-700 hover:decoration-orange-700/50 dark:text-orange-400 dark:decoration-orange-400/40 dark:hover:text-orange-300";
+  "text-sky-600 underline decoration-sky-600/30 underline-offset-[3px] transition-colors hover:text-sky-700 hover:decoration-sky-700/50 dark:text-sky-400 dark:decoration-sky-400/40 dark:hover:text-sky-300";
 
 export default function AcademicsPage() {
   return (
@@ -33,7 +33,7 @@ export default function AcademicsPage() {
 
       <section className="mt-14 space-y-6">
         <h2 className="text-sm font-medium text-muted-foreground">school</h2>
-        <div className="space-y-5 border-l-2 border-orange-500/25 pl-5 text-[0.9375rem] leading-relaxed text-foreground dark:border-orange-400/20">
+        <div className="space-y-5 border-l-2 border-sky-500/25 pl-5 text-[0.9375rem] leading-relaxed text-foreground dark:border-sky-400/20">
           <p>
             {princetonOverview.classYear} at princeton, working toward a b.s.e.
             in orfe, minors in {princetonOverview.minors.join(" and ")},

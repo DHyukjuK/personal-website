@@ -12,7 +12,12 @@ const withMDX = createMDX({
 /** @type {import("next").NextConfig} */
 const nextConfig = {
   pageExtensions: ["ts", "tsx", "md", "mdx"],
-  outputFileTracingRoot: __dirname
+  outputFileTracingRoot: __dirname,
+  images: {
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;"
+  }
 };
 
 export default withMDX(nextConfig);

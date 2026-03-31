@@ -4,7 +4,7 @@ import { Container } from "@/components/ui/container";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-foreground/10">
+    <footer className="relative z-10 border-t border-foreground/10 bg-background">
       <Container className="flex flex-col gap-4 py-10 text-[11px] text-muted-foreground md:flex-row md:items-center md:justify-between md:gap-8">
         <p className="lowercase tracking-[0.04em]">
           © {new Date().getFullYear()} {siteConfig.name}

@@ -50,7 +50,7 @@ export function SiteHeader() {
                   className={cn(
                     "whitespace-nowrap lowercase tracking-[0.06em] transition-colors duration-200 ease-out",
                     isActive
-                      ? "text-orange-600 dark:text-orange-400"
+                      ? "text-sky-600 dark:text-sky-400"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >

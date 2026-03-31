@@ -29,7 +29,7 @@ export function RevealOnView({
       ([entry]) => {
         if (entry.isIntersecting) setVisible(true);
       },
-      { threshold: 0.08, rootMargin: "0px 0px -6% 0px" }
+      { threshold: 0.06, rootMargin: "0px 0px -4% 0px" }
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -39,8 +39,8 @@ export function RevealOnView({
     <div
       ref={ref}
       className={cn(
-        "transition-[opacity,transform] duration-700 ease-soft-out",
-        visible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0",
+        "transition-[opacity,transform] duration-[1000ms] ease-soft-out",
+        visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
         className
       )}
       style={{ transitionDelay: `${delayMs}ms` }}

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, IBM_Plex_Serif } from "next/font/google";
-import { siteConfig } from "@/config/site";
+import { getSiteUrl, siteConfig } from "@/config/site";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -19,8 +19,30 @@ const ibmPlexSerif = IBM_Plex_Serif({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
   title: siteConfig.title,
-  description: siteConfig.description
+  description: siteConfig.description,
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: siteConfig.name,
+    title: siteConfig.title,
+    description: siteConfig.description,
+    images: [
+      {
+        url: siteConfig.profileImage,
+        width: 900,
+        height: 1200,
+        alt: `${siteConfig.name} portrait`
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteConfig.title,
+    description: siteConfig.description,
+    images: [siteConfig.profileImage]
+  }
 };
 
 export default function RootLayout({

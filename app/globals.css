@@ -3,21 +3,23 @@
 @tailwind utilities;
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 0 0% 9%;
-  --muted: 0 0% 96%;
-  --muted-foreground: 0 0% 45%;
-  --border: 0 0% 90%;
-  --card: 0 0% 100%;
+  --background: 210 20% 97%;
+  --foreground: 220 14% 10%;
+  --muted: 210 14% 92%;
+  --muted-foreground: 215 8% 42%;
+  --border: 210 10% 86%;
+  --card: 210 14% 95%;
+  --accent: 205 65% 55%;
 }
 
 .dark {
-  --background: 0 0% 5%;
-  --foreground: 0 0% 96%;
-  --muted: 0 0% 12%;
-  --muted-foreground: 0 0% 60%;
-  --border: 0 0% 18%;
-  --card: 0 0% 8%;
+  --background: 222 26% 4.5%;
+  --foreground: 210 12% 92%;
+  --muted: 222 18% 10%;
+  --muted-foreground: 218 10% 56%;
+  --border: 222 14% 14%;
+  --card: 222 20% 6.5%;
+  --accent: 205 60% 55%;
 }
 
 * {
@@ -33,51 +35,59 @@ body {
   @apply min-h-screen font-sans;
 }
 
+::selection {
+  background-color: hsl(205 45% 85%);
+  color: hsl(220 20% 12%);
+}
+
+.dark ::selection {
+  background-color: hsl(215 40% 28%);
+  color: hsl(210 15% 96%);
+}
+
 /**
- * /music — soft violet “night window” wash (inspired by calm lo-fi refs),
- * kept low-contrast so type stays readable in light and dark.
+ * /music page atmosphere
  */
 .music-page-atmosphere {
-  background-color: hsl(270 18% 98%);
+  background-color: hsl(40 20% 97%);
   background-image:
     radial-gradient(
-      ellipse 110% 75% at 50% -18%,
-      hsl(268 42% 92% / 0.95) 0%,
-      transparent 52%
+      ellipse 105% 72% at 48% -16%,
+      hsl(38 40% 93% / 0.92) 0%,
+      transparent 54%
     ),
     radial-gradient(
-      ellipse 60% 50% at 100% 28%,
-      hsl(285 38% 90% / 0.65) 0%,
-      transparent 48%
+      ellipse 58% 48% at 100% 26%,
+      hsl(210 26% 90% / 0.55) 0%,
+      transparent 50%
     ),
     radial-gradient(
-      ellipse 45% 40% at 0% 85%,
-      hsl(195 35% 92% / 0.4) 0%,
-      transparent 45%
+      ellipse 48% 42% at 0% 88%,
+      hsl(185 22% 91% / 0.38) 0%,
+      transparent 46%
     );
 }
 
 .dark .music-page-atmosphere {
-  background-color: hsl(265 12% 6%);
+  background-color: hsl(222 22% 5%);
   background-image:
     radial-gradient(
-      ellipse 100% 68% at 50% -12%,
-      hsl(265 45% 24% / 0.55) 0%,
+      ellipse 95% 66% at 50% -10%,
+      hsl(32 32% 18% / 0.5) 0%,
       transparent 56%
     ),
     radial-gradient(
-      ellipse 55% 42% at 95% 28%,
-      hsl(280 40% 20% / 0.42) 0%,
+      ellipse 52% 40% at 96% 26%,
+      hsl(215 40% 14% / 0.4) 0%,
       transparent 50%
     ),
     radial-gradient(
-      ellipse 40% 38% at 5% 88%,
-      hsl(200 40% 18% / 0.22) 0%,
+      ellipse 42% 36% at 6% 86%,
+      hsl(190 28% 12% / 0.3) 0%,
       transparent 48%
     );
 }
 
-/* Listening stack on /music — faint Spotify-green glow on the card stack */
 .music-listening-panel {
   background-image:
     radial-gradient(
@@ -106,4 +116,292 @@ body {
       hsl(var(--background) / 0.92) 45%,
       hsl(var(--background) / 0.78) 100%
     );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Homepage atmosphere: layered gradient mesh, drifting orbs, grain, vignette  */
+/* -------------------------------------------------------------------------- */
+
+.home-atmosphere-base {
+  background:
+    radial-gradient(
+      ellipse 85% 70% at 5% 2%,
+      hsl(205 50% 82% / 0.9) 0%,
+      hsl(210 32% 90% / 0.45) 38%,
+      transparent 54%
+    ),
+    radial-gradient(
+      ellipse 75% 58% at 95% 8%,
+      hsl(215 44% 82% / 0.75) 0%,
+      hsl(220 28% 90% / 0.35) 40%,
+      transparent 52%
+    ),
+    radial-gradient(
+      ellipse 60% 50% at 38% 98%,
+      hsl(200 35% 84% / 0.55) 0%,
+      transparent 48%
+    ),
+    hsl(var(--background));
+}
+
+.dark .home-atmosphere-base {
+  background:
+    radial-gradient(
+      ellipse 85% 65% at 4% 4%,
+      hsl(210 50% 12% / 0.8) 0%,
+      hsl(215 35% 8% / 0.38) 38%,
+      transparent 52%
+    ),
+    radial-gradient(
+      ellipse 75% 58% at 96% 8%,
+      hsl(220 52% 10% / 0.7) 0%,
+      hsl(222 35% 6% / 0.3) 40%,
+      transparent 52%
+    ),
+    radial-gradient(
+      ellipse 60% 50% at 38% 96%,
+      hsl(240 22% 8% / 0.45) 0%,
+      transparent 46%
+    ),
+    hsl(var(--background));
+}
+
+.home-atmosphere-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.home-atmosphere-orb-a {
+  width: min(55vw, 32rem);
+  height: min(55vw, 32rem);
+  left: -8%;
+  top: 4%;
+  background: hsl(205 55% 74% / 0.6);
+}
+
+.dark .home-atmosphere-orb-a {
+  background: hsl(210 55% 18% / 0.55);
+  filter: blur(90px);
+}
+
+.home-atmosphere-orb-b {
+  width: min(50vw, 30rem);
+  height: min(50vw, 30rem);
+  right: -10%;
+  top: 18%;
+  background: hsl(215 48% 72% / 0.55);
+}
+
+.dark .home-atmosphere-orb-b {
+  background: hsl(220 50% 14% / 0.5);
+  filter: blur(90px);
+}
+
+.home-atmosphere-orb-c {
+  width: min(45vw, 26rem);
+  height: min(45vw, 26rem);
+  left: 25%;
+  bottom: -10%;
+  background: hsl(200 38% 74% / 0.45);
+}
+
+.dark .home-atmosphere-orb-c {
+  background: hsl(240 22% 10% / 0.42);
+  filter: blur(85px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-atmosphere-orb-a {
+    animation: home-orb-drift-a 44s ease-in-out infinite alternate;
+  }
+  .home-atmosphere-orb-b {
+    animation: home-orb-drift-b 52s ease-in-out infinite alternate;
+  }
+  .home-atmosphere-orb-c {
+    animation: home-orb-drift-c 60s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes home-orb-drift-a {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { transform: translate(3%, 4%) scale(1.06); opacity: 1; }
+}
+
+@keyframes home-orb-drift-b {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  50% { opacity: 0.75; }
+  100% { transform: translate(-4%, 3%) scale(1.05); opacity: 1; }
+}
+
+@keyframes home-orb-drift-c {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  50% { opacity: 0.65; }
+  100% { transform: translate(2%, -3%) scale(1.04); opacity: 1; }
+}
+
+.home-atmosphere-grain {
+  opacity: 0.06;
+  mix-blend-mode: multiply;
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    hsl(210 10% 42% / 0.14) 1px,
+    transparent 0
+  );
+  background-size: 3px 3px;
+}
+
+.dark .home-atmosphere-grain {
+  opacity: 0.055;
+  mix-blend-mode: overlay;
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    hsl(0 0% 100% / 0.06) 1px,
+    transparent 0
+  );
+}
+
+/* Vignette: focus attention inward */
+.home-atmosphere-vignette {
+  background: radial-gradient(
+    ellipse 72% 62% at 50% 42%,
+    transparent 0%,
+    hsl(210 20% 88% / 0.3) 100%
+  );
+}
+
+.dark .home-atmosphere-vignette {
+  background: radial-gradient(
+    ellipse 58% 48% at 50% 40%,
+    transparent 0%,
+    hsl(222 30% 2% / 0.7) 100%
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Hero portrait: warm glow halo + gentle float                              */
+/* -------------------------------------------------------------------------- */
+
+.hero-portrait-glow {
+  background: radial-gradient(
+    ellipse 130% 130% at 50% 50%,
+    hsl(205 50% 72% / 0.3) 0%,
+    hsl(210 38% 80% / 0.15) 40%,
+    hsl(215 25% 88% / 0.06) 60%,
+    transparent 80%
+  );
+}
+
+.dark .hero-portrait-glow {
+  background: radial-gradient(
+    ellipse 130% 130% at 50% 50%,
+    hsl(210 55% 30% / 0.45) 0%,
+    hsl(215 45% 20% / 0.2) 40%,
+    hsl(220 35% 12% / 0.08) 60%,
+    transparent 80%
+  );
+}
+
+/* Animated shimmer ring around portrait */
+@property --shimmer-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* The shimmer ring wraps the figure so overflow-hidden doesn't clip it */
+.hero-portrait-ring {
+  position: relative;
+  padding: 2px;
+}
+
+.hero-portrait-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 1.1rem;
+  background: conic-gradient(
+    from var(--shimmer-angle),
+    transparent 0%,
+    hsl(200 55% 68% / 0.4) 10%,
+    transparent 22%,
+    transparent 48%,
+    hsl(220 45% 70% / 0.3) 58%,
+    transparent 72%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 2px;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.dark .hero-portrait-ring::before {
+  background: conic-gradient(
+    from var(--shimmer-angle),
+    transparent 0%,
+    hsl(205 60% 55% / 0.55) 10%,
+    transparent 22%,
+    transparent 48%,
+    hsl(220 50% 55% / 0.4) 58%,
+    transparent 72%,
+    transparent 100%
+  );
+  opacity: 0.95;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-portrait-ring::before {
+    animation: shimmer-rotate 14s linear infinite;
+  }
+}
+
+@keyframes shimmer-rotate {
+  to { --shimmer-angle: 360deg; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-hero-portrait-float {
+    animation: home-portrait-float 22s ease-in-out infinite;
+  }
+}
+
+@keyframes home-portrait-float {
+  0%, 100% { transform: translateY(5px); }
+  50% { transform: translateY(0px); }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Signature link underline                                                   */
+/* -------------------------------------------------------------------------- */
+
+.link-warm-underline {
+  background-image: linear-gradient(
+    to right,
+    hsl(var(--foreground) / 0.42),
+    hsl(var(--foreground) / 0.42)
+  );
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  padding-bottom: 2px;
+  transition: background-size 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.3s ease;
+}
+
+.link-warm-underline:hover {
+  background-size: 100% 1px;
+}
+
+.dark .link-warm-underline {
+  background-image: linear-gradient(
+    to right,
+    hsl(var(--foreground) / 0.45),
+    hsl(var(--foreground) / 0.45)
+  );
 }

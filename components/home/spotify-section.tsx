@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -15,6 +15,10 @@ import { cn } from "@/lib/utils";
 type SpotifyVariant = "default" | "music";
 
 const spotifyHex = streamingBrandHex("spotify");
+
+/** Shown beside live track data and in the empty state intro line. */
+const LISTENING_ACTIVITY_BLURB =
+  "My listening activity—live playback or the most recent track from my history.";
 
 function SpotifyEyebrow({
   variant = "default",
@@ -47,21 +51,10 @@ function CardShell({
   return (
     <div
       className={cn(
-        "p-5 md:p-6",
-        variant === "music"
-          ? cn(
-              "rounded-2xl border border-foreground/10 bg-muted/25 shadow-[0_14px_42px_-26px_rgba(15,40,25,0.35)] ring-1 ring-inset ring-emerald-500/[0.09] dark:bg-muted/15 dark:shadow-[0_18px_50px_-28px_rgba(0,0,0,0.55)] dark:ring-emerald-400/[0.07]"
-            )
-          : "rounded-lg border border-foreground/10 bg-muted/20"
+        variant === "music" &&
+          "border-l-2 border-foreground/[0.06] pl-5 md:pl-6 dark:border-foreground/[0.08]",
+        variant === "default" && "rounded-lg border border-foreground/10 bg-muted/20 p-5 md:p-6"
       )}
-      style={
-        variant === "music"
-          ? ({
-              borderLeftWidth: 3,
-              borderLeftColor: `#${spotifyHex}`
-            } as React.CSSProperties)
-          : undefined
-      }
     >
       {children}
     </div>
@@ -146,15 +139,20 @@ export function SpotifySection({
 
       {state.phase === "empty" ? (
         <CardShell variant={variant}>
-          <p className="text-[0.625rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            Spotify
-          </p>
+          <SpotifyEyebrow variant={variant} />
           <p className="mt-2 text-[0.8125rem] leading-relaxed text-muted-foreground">
-            What I&apos;m playing now, or the last thing in my Spotify listening
-            history.
+            {LISTENING_ACTIVITY_BLURB}
           </p>
-          <p className="mt-5 text-[0.8125rem] leading-relaxed text-muted-foreground/90">
-            Nothing to show yet. After you play a track, it should appear here.
+          <p className="mt-4 text-[0.8125rem] leading-relaxed text-muted-foreground/90">
+            There isn&apos;t any recent playback to show here right now. You can
+            check back later or visit the{" "}
+            <Link
+              href="/music"
+              className="text-foreground underline decoration-foreground/20 underline-offset-[4px] transition-colors hover:decoration-foreground/40"
+            >
+              music
+            </Link>{" "}
+            page for streaming links and performances.
           </p>
         </CardShell>
       ) : null}
@@ -185,47 +183,48 @@ function PlaybackCard({
   variant?: SpotifyVariant;
 }) {
   const status = playbackStatusLabel(playback.mode);
+  const isMusic = variant === "music";
 
   return (
     <CardShell variant={variant}>
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
-        <div className="min-w-0 flex-1 space-y-4">
-          <header className="space-y-2">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
+        <div className="min-w-0 flex-1 space-y-3.5">
+          <header className="space-y-3">
             <SpotifyEyebrow variant={variant} />
-            <p className="max-w-prose text-[0.8125rem] leading-relaxed text-muted-foreground">
-              Either what&apos;s playing right now or the last track that showed
-              up in my history.
-            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-[0.625rem] font-medium uppercase tracking-[0.14em] text-muted-foreground/80">
+                {status}
+              </span>
+              {playback.mode === "now" ? (
+                <span
+                  className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500/80"
+                  aria-hidden
+                />
+              ) : null}
+            </div>
           </header>
 
-          <div className="flex items-center gap-2">
-            <span className="text-[0.625rem] font-medium uppercase tracking-[0.14em] text-muted-foreground/90">
-              {status}
-            </span>
-            {playback.mode === "now" ? (
-              <span
-                className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500/85"
-                aria-hidden
-              />
-            ) : null}
-          </div>
-
-          <div className="space-y-1.5">
-            <h2 className="text-lg font-medium leading-snug tracking-tight text-foreground md:text-xl">
+          <div className="space-y-1">
+            <h2
+              className={cn(
+                "font-semibold leading-snug tracking-tight text-foreground",
+                isMusic ? "text-base md:text-lg" : "text-lg font-medium md:text-xl"
+              )}
+            >
               <Link
                 href={playback.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="transition-colors hover:text-foreground/85"
+                className="transition-colors duration-500 ease-out hover:text-foreground/80"
               >
                 {playback.name}
               </Link>
             </h2>
-            <p className="text-[0.875rem] leading-relaxed text-muted-foreground">
+            <p className="text-[0.8125rem] leading-relaxed text-muted-foreground">
               {playback.artists}
             </p>
             {playback.album ? (
-              <p className="text-[0.8125rem] leading-relaxed text-muted-foreground/75">
+              <p className="text-[0.75rem] leading-relaxed text-muted-foreground/65">
                 {playback.album}
               </p>
             ) : null}
@@ -238,23 +237,23 @@ function PlaybackCard({
             target="_blank"
             rel="noopener noreferrer"
             className={cn(
-              "group relative mx-auto shrink-0 overflow-hidden border border-foreground/10 bg-muted/40 sm:mx-0",
-              variant === "music"
-                ? "rounded-xl shadow-[0_12px_28px_-12px_rgba(0,0,0,0.35)] ring-2 ring-black/[0.04] dark:ring-white/[0.08]"
-                : "rounded-md"
+              "group relative mx-auto shrink-0 overflow-hidden bg-muted/30 sm:mx-0",
+              isMusic
+                ? "rounded-lg shadow-[0_10px_24px_-10px_rgba(0,0,0,0.25)] ring-1 ring-foreground/[0.05] dark:shadow-[0_12px_28px_-10px_rgba(0,0,0,0.5)] dark:ring-white/[0.06]"
+                : "rounded-md border border-foreground/10"
             )}
             aria-label="Open on Spotify"
           >
             <Image
               src={playback.imageUrl}
               alt=""
-              width={variant === "music" ? 104 : 88}
-              height={variant === "music" ? 104 : 88}
+              width={isMusic ? 96 : 88}
+              height={isMusic ? 96 : 88}
               className={cn(
-                "object-cover transition-[opacity,transform] duration-300 group-hover:opacity-90",
-                variant === "music"
-                  ? "h-[5.25rem] w-[5.25rem] group-hover:scale-[1.02] sm:h-[5.75rem] sm:w-[5.75rem]"
-                  : "h-[4.5rem] w-[4.5rem] sm:h-[5rem] sm:w-[5rem]"
+                "object-cover transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                isMusic
+                  ? "h-[4.75rem] w-[4.75rem] group-hover:scale-[1.02] sm:h-[5.25rem] sm:w-[5.25rem]"
+                  : "h-[4.5rem] w-[4.5rem] group-hover:opacity-90 sm:h-[5rem] sm:w-[5rem]"
               )}
               unoptimized
             />

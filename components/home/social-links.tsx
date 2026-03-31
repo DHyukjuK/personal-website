@@ -2,7 +2,7 @@ import Link from "next/link";
 import { siteConfig } from "@/config/site";
 
 const linkClass =
-  "inline-flex items-center border-b border-transparent pb-0.5 text-[0.8125rem] text-muted-foreground transition-[color,border-color] duration-200 ease-out hover:border-foreground/30 hover:text-foreground";
+  "link-warm-underline inline-flex items-center text-[0.8125rem] text-muted-foreground hover:text-foreground";
 
 export function SocialLinks() {
   return (
