@@ -100,8 +100,7 @@ export function SpotifySection() {
             history.
           </p>
           <p className="mt-5 text-[0.8125rem] leading-relaxed text-muted-foreground/90">
-            No recent activity from Spotify yet. Private listening hides this;
-            the site also needs to use the same Spotify account you listen with.
+            Nothing to show yet. After you play a track, it should appear here.
           </p>
         </CardShell>
       ) : null}

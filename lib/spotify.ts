@@ -34,8 +34,9 @@ const ENV = [
 const ACCOUNTS = "https://accounts.spotify.com/api/token";
 const CURRENT =
   "https://api.spotify.com/v1/me/player/currently-playing?additional_types=episode";
+/** Enough rows to skip null or odd entries; still one Web API call. */
 const RECENT =
-  "https://api.spotify.com/v1/me/player/recently-played?limit=1";
+  "https://api.spotify.com/v1/me/player/recently-played?limit=20";
 
 type PlayableItem = {
   name?: string;
@@ -46,11 +47,26 @@ type PlayableItem = {
   images?: { url?: string }[];
 };
 
+type CurrentPlayingJson = {
+  is_playing?: boolean;
+  item?: PlayableItem | null;
+};
+
+type RecentJson = {
+  items?: unknown;
+};
+
 let tokenCache: { value: string; until: number } | null = null;
 
 /**
- * Reuse the last successful playback payload so the client can poll `/api/spotify`
- * often without hitting Spotify’s Web API every time (rate limits / 429).
+ * Last good track from Spotify. Used when a later request fails or returns
+ * nothing parseable, but we have not confirmed that the account has no history.
+ */
+let stickyLastPlayback: SpotifyPlayback | null = null;
+
+/**
+ * Positive cache only: avoids hammering Spotify while the client polls often.
+ * We do not cache long-lived “empty” responses (that caused false empty states).
  */
 let playbackPayloadCache: {
   payload: Extract<SpotifyNowPayload, { ok: true }>;
@@ -100,6 +116,10 @@ function itemHref(t: PlayableItem): string | null {
   return `https://open.spotify.com/search/${encodeURIComponent(q)}`;
 }
 
+function isPlayableItem(x: unknown): x is PlayableItem {
+  return x != null && typeof x === "object";
+}
+
 function playbackFromItem(
   t: PlayableItem,
   mode: SpotifyPlaybackMode
@@ -118,6 +138,65 @@ function playbackFromItem(
     imageUrl: itemImage(t),
     mode
   };
+}
+
+function firstRecentPlayback(
+  items: unknown
+): SpotifyPlayback | null {
+  if (!Array.isArray(items)) return null;
+  for (const row of items) {
+    if (!row || typeof row !== "object") continue;
+    const track = (row as { track?: unknown }).track;
+    if (!isPlayableItem(track)) continue;
+    const p = playbackFromItem(track, "recent");
+    if (p) return p;
+  }
+  return null;
+}
+
+async function resolvePlaybackFromSpotify(
+  token: string
+): Promise<{ playback: SpotifyPlayback | null }> {
+  const h = { Authorization: `Bearer ${token}` };
+
+  try {
+    const [curRes, recRes] = await Promise.all([
+      fetch(CURRENT, { headers: h, cache: "no-store" }),
+      fetch(RECENT, { headers: h, cache: "no-store" })
+    ]);
+
+    const curData =
+      curRes.status === 200
+        ? await readJson<CurrentPlayingJson>(curRes)
+        : undefined;
+
+    let recentItems: unknown;
+    if (recRes.ok) {
+      const recData = await readJson<RecentJson>(recRes);
+      recentItems = recData?.items;
+    }
+
+    const liveItem = curData?.item;
+    const isLive = Boolean(curData?.is_playing && liveItem && isPlayableItem(liveItem));
+    if (isLive && liveItem) {
+      const p = playbackFromItem(liveItem, "now");
+      if (p) return { playback: p };
+    }
+
+    const fromRecent = firstRecentPlayback(recentItems);
+    if (fromRecent) {
+      return { playback: fromRecent };
+    }
+
+    if (liveItem && isPlayableItem(liveItem)) {
+      const p = playbackFromItem(liveItem, "paused");
+      if (p) return { playback: p };
+    }
+
+    return { playback: null };
+  } catch {
+    return { playback: null };
+  }
 }
 
 async function refreshToken(): Promise<{ ok: true; token: string } | { ok: false }> {
@@ -161,56 +240,6 @@ async function bearer(): Promise<string | null> {
   return r.ok ? r.token : null;
 }
 
-/**
- * Prefer live playback when `is_playing`; otherwise use recently-played so
- * idle listeners still see their last track (not only a paused queue item).
- */
-async function fetchPlayback(token: string): Promise<SpotifyPlayback | null> {
-  const h = { Authorization: `Bearer ${token}` };
-
-  try {
-    const [curRes, recRes] = await Promise.all([
-      fetch(CURRENT, { headers: h, cache: "no-store" }),
-      fetch(RECENT, { headers: h, cache: "no-store" })
-    ]);
-
-    const cur =
-      curRes.status === 200
-        ? await readJson<{
-            is_playing?: boolean;
-            item?: PlayableItem | null;
-          }>(curRes)
-        : undefined;
-
-    let recentItem: PlayableItem | null = null;
-    if (recRes.ok) {
-      const rec = await readJson<{
-        items?: { track?: PlayableItem | null }[];
-      }>(recRes);
-      recentItem = rec?.items?.[0]?.track ?? null;
-    }
-
-    if (cur?.item && cur.is_playing) {
-      const p = playbackFromItem(cur.item, "now");
-      if (p) return p;
-    }
-
-    if (recentItem) {
-      const p = playbackFromItem(recentItem, "recent");
-      if (p) return p;
-    }
-
-    if (cur?.item) {
-      const p = playbackFromItem(cur.item, "paused");
-      if (p) return p;
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
-
 export async function getSpotifyNowPayload(): Promise<SpotifyNowPayload> {
   const miss = missingEnv();
   if (miss.length > 0) {
@@ -227,15 +256,34 @@ export async function getSpotifyNowPayload(): Promise<SpotifyNowPayload> {
       playbackPayloadCache = null;
       return { ok: false, reason: "auth" };
     }
-    const now = await fetchPlayback(token);
+
+    const { playback } = await resolvePlaybackFromSpotify(token);
+
+    let now: SpotifyPlayback | null = playback;
+
+    if (playback) {
+      stickyLastPlayback = playback;
+    } else if (stickyLastPlayback) {
+      // Keep showing the last track we successfully resolved. Do not clear this
+      // when Spotify returns an empty-looking response—those responses can be
+      // transient or stricter than “no history” (e.g. empty items briefly).
+      now = stickyLastPlayback;
+    }
+
     const payload: Extract<SpotifyNowPayload, { ok: true }> = {
       ok: true,
       now
     };
-    playbackPayloadCache = {
-      payload,
-      until: Date.now() + PLAYBACK_CACHE_TTL_MS
-    };
+
+    if (now !== null) {
+      playbackPayloadCache = {
+        payload,
+        until: Date.now() + PLAYBACK_CACHE_TTL_MS
+      };
+    } else {
+      playbackPayloadCache = null;
+    }
+
     return payload;
   } catch (e) {
     playbackPayloadCache = null;
