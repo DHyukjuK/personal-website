@@ -47,7 +47,7 @@ If env vars are missing, the running page shows a fallback state.
    `npm run spotify:exchange -- "PASTE_CODE" "https://davidhkwon.vercel.app"`
 5. Add the printed `SPOTIFY_REFRESH_TOKEN` to `.env.local`, restart `npm run dev`, and check the home page.
 
-Scopes: `user-read-currently-playing`, `user-read-recently-played`, `user-top-read` (top artists & tracks).
+Scopes: `user-read-currently-playing`, `user-read-recently-played` (now playing / last played on the home page).
 
 ## GitHub
 

@@ -1,251 +1,199 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-type SpotifyIssue =
-  | "missing_env"
-  | "refresh_failed"
-  | "api_error"
-  | "no_tracks"
-  | "server_error"
-  | "fetch_failed";
+import { useSpotifyNow } from "@/components/home/use-spotify-now";
+import type { SpotifyPlayback, SpotifyPlaybackMode } from "@/lib/spotify";
+import { cn } from "@/lib/utils";
 
-type Payload = {
-  configured: boolean;
-  listening: {
-    track: string;
-    artists: string;
-    trackUrl: string;
-    isPlaying: boolean;
-  } | null;
-  listeningIssue?: "no_tracks";
-  issue?: SpotifyIssue;
-  missingEnvKeys?: string[];
-  spotifyStatus?: number;
-  topTracks: {
-    name: string;
-    artists: string;
-    url: string;
-    imageUrl: string | null;
-  }[];
-  topArtists: {
-    name: string;
-    url: string;
-    imageUrl: string | null;
-  }[];
-  topDataUnavailable?: boolean;
-};
+function CardShell({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg border border-foreground/10 bg-muted/20",
+        "p-5 md:p-6"
+      )}
+    >
+      {children}
+    </div>
+  );
+}
 
-const issueHint: Record<SpotifyIssue, string> = {
-  missing_env:
-    "Spotify isn’t connected yet. Set SPOTIFY_* in .env.local or Vercel, then restart or redeploy.",
-  refresh_failed:
-    "Spotify rejected the refresh token. Run scripts/spotify-exchange.mjs with a fresh OAuth code.",
-  api_error:
-    "Spotify blocked part of the request. Check the Developer Dashboard (User Management + scopes).",
-  no_tracks:
-    "No recent plays found.",
-  server_error:
-    "The Spotify API route failed. Check server logs.",
-  fetch_failed:
-    "Couldn’t load Spotify data. Refresh the page or open /api/spotify."
-};
+function CardSkeleton() {
+  return (
+    <CardShell>
+      <div className="animate-pulse space-y-4">
+        <div className="h-2.5 w-24 rounded bg-muted-foreground/15" />
+        <div className="h-3 max-w-md rounded bg-muted-foreground/10" />
+        <div className="h-3 w-28 rounded bg-muted-foreground/12" />
+        <div className="h-6 max-w-xs rounded bg-muted-foreground/15" />
+        <div className="h-4 max-w-[14rem] rounded bg-muted-foreground/10" />
+      </div>
+    </CardShell>
+  );
+}
 
 export function SpotifySection() {
-  const [data, setData] = useState<Payload | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        const res = await fetch("/api/spotify");
-        const json = (await res.json()) as Payload;
-        if (!cancelled) setData(json);
-      } catch {
-        if (!cancelled)
-          setData({
-            configured: false,
-            listening: null,
-            topTracks: [],
-            topArtists: [],
-            issue: "fetch_failed"
-          });
-      }
-    }
-
-    load();
-    const id = window.setInterval(load, 60_000);
-    return () => {
-      cancelled = true;
-      window.clearInterval(id);
-    };
-  }, []);
-
-  if (data === null) {
-    return null;
-  }
-
-  const showFatalError =
-    data.issue &&
-    data.issue !== "no_tracks" &&
-    !(data.topTracks.length > 0 || data.topArtists.length > 0);
-
-  const showListeningError =
-    data.issue === "no_tracks" || data.listeningIssue === "no_tracks";
+  const state = useSpotifyNow();
 
   return (
-    <div className="border-t border-foreground/10 pt-8 text-[0.8125rem] leading-relaxed text-muted-foreground">
-      <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/90">
-        My Spotify
-      </p>
-      <p className="mt-2 max-w-prose text-[0.8125rem] text-muted-foreground">
-        Listening activity from my account—live playback, last played, and top
-        artists &amp; tracks (roughly the last few weeks).
-      </p>
+    <section
+      className="border-t border-foreground/10 pt-8 md:pt-10"
+      aria-label="Spotify listening activity"
+    >
+      {state.phase === "loading" ? <CardSkeleton /> : null}
 
-      {showFatalError ? (
-        <p className="mt-4 max-w-prose text-[0.8125rem]">
-          {issueHint[data.issue!]}
-          {data.issue === "missing_env" && data.missingEnvKeys?.length
-            ? ` Unset or empty: ${data.missingEnvKeys.join(", ")}.`
-            : ""}
-          {data.spotifyStatus != null
-            ? ` Spotify HTTP status: ${data.spotifyStatus}.`
-            : ""}
-        </p>
-      ) : null}
-
-      {!showFatalError && data.issue && data.issue !== "no_tracks" ? (
-        <p className="mt-4 max-w-prose text-[0.8125rem] text-amber-700/90 dark:text-amber-400/90">
-          {issueHint[data.issue]}
-          {data.spotifyStatus != null ? ` (${data.spotifyStatus})` : ""}
-        </p>
-      ) : null}
-
-      {data.listening ? (
-        <div className="mt-6">
-          <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/90">
-            {data.listening.isPlaying ? "Now playing" : "Last played"}
+      {state.phase === "setup" ? (
+        <CardShell>
+          <p className="text-[0.625rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            Spotify
           </p>
-          <p className="mt-2">
-            <Link
-              href={data.listening.trackUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-foreground underline decoration-foreground/20 underline-offset-[4px] transition-colors hover:decoration-foreground/40"
-            >
-              {data.listening.track}
-            </Link>
-            <span className="text-muted-foreground">
-              {" "}
-              — {data.listening.artists}
+          <p className="mt-3 text-[0.8125rem] leading-relaxed text-muted-foreground">
+            Listening activity isn&apos;t connected yet. Add{" "}
+            <code className="rounded bg-muted px-1 py-0.5 text-[0.7rem]">
+              {state.missingEnv.join(", ")}
+            </code>{" "}
+            to your env file, then run{" "}
+            <code className="rounded bg-muted px-1 py-0.5 text-[0.7rem]">
+              npm run spotify:exchange
+            </code>{" "}
+            and restart the dev server.
+          </p>
+        </CardShell>
+      ) : null}
+
+      {state.phase === "auth" ? (
+        <CardShell>
+          <p className="text-[0.625rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            Spotify
+          </p>
+          <p className="mt-3 text-[0.8125rem] leading-relaxed text-muted-foreground">
+            Can&apos;t refresh the Spotify link. Run{" "}
+            <code className="rounded bg-muted px-1 py-0.5 text-[0.7rem]">
+              npm run spotify:exchange
+            </code>{" "}
+            with a new authorization code and update your refresh token.
+          </p>
+        </CardShell>
+      ) : null}
+
+      {state.phase === "error" ? (
+        <CardShell>
+          <p className="text-[0.625rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            Spotify
+          </p>
+          <p className="mt-3 text-[0.8125rem] leading-relaxed text-muted-foreground">
+            {state.message}
+          </p>
+        </CardShell>
+      ) : null}
+
+      {state.phase === "empty" ? (
+        <CardShell>
+          <p className="text-[0.625rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            Spotify
+          </p>
+          <p className="mt-2 text-[0.8125rem] leading-relaxed text-muted-foreground">
+            What I&apos;m playing now, or the last thing in my Spotify listening
+            history.
+          </p>
+          <p className="mt-5 text-[0.8125rem] leading-relaxed text-muted-foreground/90">
+            No recent activity from Spotify yet. Private listening hides this;
+            the site also needs to use the same Spotify account you listen with.
+          </p>
+        </CardShell>
+      ) : null}
+
+      {state.phase === "ready" ? (
+        <PlaybackCard playback={state.playback} />
+      ) : null}
+    </section>
+  );
+}
+
+function playbackStatusLabel(mode: SpotifyPlaybackMode): string {
+  switch (mode) {
+    case "now":
+      return "Now playing on Spotify";
+    case "recent":
+      return "Recently played on Spotify";
+    case "paused":
+      return "Paused on Spotify";
+  }
+}
+
+function PlaybackCard({ playback }: { playback: SpotifyPlayback }) {
+  const status = playbackStatusLabel(playback.mode);
+
+  return (
+    <CardShell>
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
+        <div className="min-w-0 flex-1 space-y-4">
+          <header className="space-y-2">
+            <p className="text-[0.625rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              Spotify
+            </p>
+            <p className="max-w-prose text-[0.8125rem] leading-relaxed text-muted-foreground">
+              My listening activity—live playback or the most recent track from
+              my history.
+            </p>
+          </header>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[0.625rem] font-medium uppercase tracking-[0.14em] text-muted-foreground/90">
+              {status}
             </span>
-            {data.listening.isPlaying ? (
-              <span className="ml-2 inline-flex h-1.5 w-1.5 animate-pulse rounded-full bg-green-600 dark:bg-green-500" />
+            {playback.mode === "now" ? (
+              <span
+                className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500/85"
+                aria-hidden
+              />
             ) : null}
-          </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <h2 className="text-lg font-medium leading-snug tracking-tight text-foreground md:text-xl">
+              <Link
+                href={playback.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-colors hover:text-foreground/85"
+              >
+                {playback.name}
+              </Link>
+            </h2>
+            <p className="text-[0.875rem] leading-relaxed text-muted-foreground">
+              {playback.artists}
+            </p>
+            {playback.album ? (
+              <p className="text-[0.8125rem] leading-relaxed text-muted-foreground/75">
+                {playback.album}
+              </p>
+            ) : null}
+          </div>
         </div>
-      ) : null}
 
-      {showListeningError && !data.listening ? (
-        <p className="mt-4 text-[0.8125rem] text-muted-foreground/90">
-          Nothing in recent plays right now—top lists below still reflect my
-          listening.
-        </p>
-      ) : null}
-
-      {data.topDataUnavailable ? (
-        <p className="mt-4 max-w-prose text-[0.8125rem] text-amber-700/90 dark:text-amber-400/90">
-          Top artists &amp; tracks need the{" "}
-          <code className="text-[0.75rem]">user-top-read</code> scope. Re-run{" "}
-          <code className="text-[0.75rem]">npm run spotify:exchange</code> with
-          a new OAuth code after updating scopes in the Spotify app.
-        </p>
-      ) : null}
-
-      {data.topTracks.length > 0 ? (
-        <div className="mt-8">
-          <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/90">
-            Top tracks
-          </p>
-          <ul className="mt-3 space-y-3">
-            {data.topTracks.map((t, i) => (
-              <li key={`${t.url}-${i}`}>
-                <Link
-                  href={t.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex gap-3 rounded-md transition-colors hover:bg-muted/50"
-                >
-                  {t.imageUrl ? (
-                    <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded bg-muted">
-                      <Image
-                        src={t.imageUrl}
-                        alt=""
-                        width={48}
-                        height={48}
-                        className="h-12 w-12 object-cover"
-                        unoptimized
-                      />
-                    </span>
-                  ) : (
-                    <span className="h-12 w-12 shrink-0 rounded bg-muted" />
-                  )}
-                  <span className="min-w-0 flex-1 py-0.5">
-                    <span className="block font-medium text-foreground group-hover:underline">
-                      {t.name}
-                    </span>
-                    <span className="block text-[0.8125rem] text-muted-foreground">
-                      {t.artists}
-                    </span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
-      {data.topArtists.length > 0 ? (
-        <div className="mt-8">
-          <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/90">
-            Top artists
-          </p>
-          <ul className="mt-3 flex flex-wrap gap-4">
-            {data.topArtists.map((a, i) => (
-              <li key={`${a.url}-${i}`}>
-                <Link
-                  href={a.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex w-[5.5rem] flex-col items-center gap-2 text-center"
-                >
-                  {a.imageUrl ? (
-                    <span className="relative h-16 w-16 overflow-hidden rounded-full bg-muted ring-1 ring-foreground/10">
-                      <Image
-                        src={a.imageUrl}
-                        alt=""
-                        width={64}
-                        height={64}
-                        className="h-16 w-16 object-cover"
-                        unoptimized
-                      />
-                    </span>
-                  ) : (
-                    <span className="h-16 w-16 rounded-full bg-muted ring-1 ring-foreground/10" />
-                  )}
-                  <span className="line-clamp-2 text-[0.75rem] font-medium leading-snug text-foreground group-hover:underline">
-                    {a.name}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-    </div>
+        {playback.imageUrl ? (
+          <Link
+            href={playback.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative mx-auto shrink-0 overflow-hidden rounded-md border border-foreground/10 bg-muted/40 sm:mx-0"
+            aria-label="Open on Spotify"
+          >
+            <Image
+              src={playback.imageUrl}
+              alt=""
+              width={88}
+              height={88}
+              className="h-[4.5rem] w-[4.5rem] object-cover transition-opacity duration-300 group-hover:opacity-90 sm:h-[5rem] sm:w-[5rem]"
+              unoptimized
+            />
+          </Link>
+        ) : null}
+      </div>
+    </CardShell>
   );
 }

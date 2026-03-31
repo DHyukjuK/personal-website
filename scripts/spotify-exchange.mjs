@@ -9,7 +9,7 @@
  * 4. Run:
  *    node scripts/spotify-exchange.mjs PASTE_CODE "https://davidhkwon.vercel.app"
  *
- * Scopes: user-read-currently-playing, user-read-recently-played, user-top-read
+ * Scopes: user-read-currently-playing, user-read-recently-played
  *
  * 5. Put SPOTIFY_REFRESH_TOKEN=... in .env.local and restart npm run dev.
  */
@@ -55,8 +55,7 @@ const redirectUri = process.argv[3] ?? DEFAULT_SPOTIFY_REDIRECT_URI;
 
 const scopes = [
   "user-read-currently-playing",
-  "user-read-recently-played",
-  "user-top-read"
+  "user-read-recently-played"
 ].join(" ");
 
 if (!code) {

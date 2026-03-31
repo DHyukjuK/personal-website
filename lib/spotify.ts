@@ -1,276 +1,249 @@
 /**
- * Server-only Spotify Web API helpers.
- * Requires SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REFRESH_TOKEN.
+ * Server-only: Spotify “now playing” or “last played”.
  *
- * Dashboard: https://developer.spotify.com/dashboard
- * Scopes: user-read-currently-playing, user-read-recently-played, user-top-read
- * In development mode, add your Spotify user under User Management.
+ * Env: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REFRESH_TOKEN
+ * Scopes: user-read-currently-playing, user-read-recently-played
  */
 
-export type SpotifyListening = {
-  track: string;
-  artists: string;
-  trackUrl: string;
-  isPlaying: boolean;
-};
+/** Where this row came from (drives labels in the UI). */
+export type SpotifyPlaybackMode = "now" | "recent" | "paused";
 
-export type SpotifyTopTrack = {
+export type SpotifyPlayback = {
   name: string;
   artists: string;
-  url: string;
+  /** Album title, or show name for podcasts. */
+  album: string | null;
+  href: string;
   imageUrl: string | null;
+  mode: SpotifyPlaybackMode;
 };
 
-export type SpotifyTopArtist = {
-  name: string;
-  url: string;
-  imageUrl: string | null;
-};
+/** JSON from GET /api/spotify */
+export type SpotifyNowPayload =
+  | { ok: false; reason: "setup"; missingEnv: string[] }
+  | { ok: false; reason: "auth" }
+  | { ok: false; reason: "spotify"; detail?: string }
+  | { ok: true; now: SpotifyPlayback | null };
 
-export type SpotifyIssue =
-  | "missing_env"
-  | "refresh_failed"
-  | "api_error"
-  | "no_tracks";
-
-export type SpotifyPayload = {
-  configured: boolean;
-  listening: SpotifyListening | null;
-  /** Present when nothing is playing / in recent history but API otherwise works. */
-  listeningIssue?: "no_tracks";
-  issue?: SpotifyIssue;
-  missingEnvKeys?: string[];
-  spotifyStatus?: number;
-  topTracks: SpotifyTopTrack[];
-  topArtists: SpotifyTopArtist[];
-  /** True if top endpoints returned 403 (re-authorize with user-top-read). */
-  topDataUnavailable?: boolean;
-};
-
-const SPOTIFY_ENV_KEYS = [
+const ENV = [
   "SPOTIFY_CLIENT_ID",
   "SPOTIFY_CLIENT_SECRET",
   "SPOTIFY_REFRESH_TOKEN"
 ] as const;
 
-const TOKEN_URL = "https://accounts.spotify.com/api/token";
-const CURRENT_URL = "https://api.spotify.com/v1/me/player/currently-playing";
-const RECENT_URL = "https://api.spotify.com/v1/me/player/recently-played?limit=1";
-const TOP_TRACKS_URL =
-  "https://api.spotify.com/v1/me/top/tracks?limit=5&time_range=short_term";
-const TOP_ARTISTS_URL =
-  "https://api.spotify.com/v1/me/top/artists?limit=5&time_range=short_term";
+const ACCOUNTS = "https://accounts.spotify.com/api/token";
+const CURRENT =
+  "https://api.spotify.com/v1/me/player/currently-playing?additional_types=episode";
+const RECENT =
+  "https://api.spotify.com/v1/me/player/recently-played?limit=1";
 
-type SpotifyTrack = {
-  name: string;
-  artists: { name: string }[];
-  external_urls: { spotify: string };
-  album?: { images?: { url: string }[] };
+type PlayableItem = {
+  name?: string;
+  artists?: { name?: string }[];
+  show?: { name?: string };
+  album?: { name?: string; images?: { url?: string }[] };
+  external_urls?: { spotify?: string };
+  images?: { url?: string }[];
 };
 
-type SpotifyArtistFull = {
-  name: string;
-  external_urls: { spotify: string };
-  images?: { url: string }[];
-};
+let tokenCache: { value: string; until: number } | null = null;
 
-export function missingSpotifyEnvKeys(): string[] {
-  return SPOTIFY_ENV_KEYS.filter((k) => !process.env[k]?.trim());
+/**
+ * Reuse the last successful playback payload so the client can poll `/api/spotify`
+ * often without hitting Spotify’s Web API every time (rate limits / 429).
+ */
+let playbackPayloadCache: {
+  payload: Extract<SpotifyNowPayload, { ok: true }>;
+  until: number;
+} | null = null;
+
+const PLAYBACK_CACHE_TTL_MS = 35_000;
+
+function missingEnv(): string[] {
+  return ENV.filter((k) => !process.env[k]?.trim());
 }
 
-function spotifyConfigured(): boolean {
-  return missingSpotifyEnvKeys().length === 0;
+async function readJson<T>(res: Response): Promise<T | undefined> {
+  const text = await res.text();
+  if (!text.trim()) return undefined;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return undefined;
+  }
 }
 
-function mapTrack(track: SpotifyTrack, isPlaying: boolean): SpotifyListening {
+function itemArtists(t: PlayableItem): string {
+  const a = (t.artists ?? [])
+    .map((x) => x.name)
+    .filter(Boolean)
+    .join(", ");
+  if (a) return a;
+  const show = t.show?.name?.trim();
+  return show ?? "—";
+}
+
+function itemImage(t: PlayableItem): string | null {
+  return (
+    t.album?.images?.[0]?.url?.trim() ??
+    t.images?.[0]?.url?.trim() ??
+    null
+  );
+}
+
+function itemHref(t: PlayableItem): string | null {
+  const spotify = t.external_urls?.spotify?.trim();
+  if (spotify) return spotify;
+  const name = t.name?.trim();
+  if (!name) return null;
+  const q = [name, itemArtists(t)].filter((s) => s && s !== "—").join(" ");
+  return `https://open.spotify.com/search/${encodeURIComponent(q)}`;
+}
+
+function playbackFromItem(
+  t: PlayableItem,
+  mode: SpotifyPlaybackMode
+): SpotifyPlayback | null {
+  const name = t.name?.trim();
+  if (!name) return null;
+  const href = itemHref(t);
+  if (!href) return null;
+  const album =
+    t.album?.name?.trim() ?? t.show?.name?.trim() ?? null;
   return {
-    track: track.name,
-    artists: track.artists.map((a) => a.name).join(", "),
-    trackUrl: track.external_urls.spotify,
-    isPlaying
+    name,
+    artists: itemArtists(t),
+    album,
+    href,
+    imageUrl: itemImage(t),
+    mode
   };
 }
 
-function pickImage(images?: { url: string }[]): string | null {
-  if (!images?.length) return null;
-  return images[0]?.url ?? null;
-}
+async function refreshToken(): Promise<{ ok: true; token: string } | { ok: false }> {
+  const id = process.env.SPOTIFY_CLIENT_ID?.trim();
+  const secret = process.env.SPOTIFY_CLIENT_SECRET?.trim();
+  const refresh = process.env.SPOTIFY_REFRESH_TOKEN?.trim();
+  if (!id || !secret || !refresh) return { ok: false };
 
-async function getAccessToken(): Promise<{ token: string | null; status: number }> {
-  const clientId = process.env.SPOTIFY_CLIENT_ID?.trim();
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET?.trim();
-  const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN?.trim();
-  if (!clientId || !clientSecret || !refreshToken) {
-    return { token: null, status: 0 };
-  }
-
-  const res = await fetch(TOKEN_URL, {
+  const res = await fetch(ACCOUNTS, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
-      Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`
+      Authorization: `Basic ${Buffer.from(`${id}:${secret}`).toString("base64")}`
     },
     body: new URLSearchParams({
       grant_type: "refresh_token",
-      refresh_token: refreshToken
+      refresh_token: refresh
     }),
     cache: "no-store"
   });
 
-  if (!res.ok) {
-    return { token: null, status: res.status };
+  const body = await readJson<{ access_token?: string; expires_in?: number }>(
+    res
+  );
+  if (!res.ok || !body?.access_token) {
+    tokenCache = null;
+    return { ok: false };
   }
 
-  const data = (await res.json()) as { access_token?: string };
-  return { token: data.access_token ?? null, status: res.status };
+  const sec = typeof body.expires_in === "number" ? body.expires_in : 3600;
+  const until = Date.now() + Math.max(30_000, (sec - 120) * 1000);
+  tokenCache = { value: body.access_token, until };
+  return { ok: true, token: body.access_token };
 }
 
-async function resolveListening(
-  headers: HeadersInit
-): Promise<{
-  listening: SpotifyListening | null;
-  issue?: SpotifyIssue;
-  spotifyStatus?: number;
-}> {
-  const current = await fetch(CURRENT_URL, { headers, cache: "no-store" });
+async function bearer(): Promise<string | null> {
+  if (tokenCache && Date.now() < tokenCache.until) {
+    return tokenCache.value;
+  }
+  const r = await refreshToken();
+  return r.ok ? r.token : null;
+}
 
-  if (current.status === 200) {
-    const data = (await current.json()) as {
-      is_playing?: boolean;
-      item?: SpotifyTrack | null;
-    };
-    if (data.item) {
-      return { listening: mapTrack(data.item, Boolean(data.is_playing)) };
+/**
+ * Prefer live playback when `is_playing`; otherwise use recently-played so
+ * idle listeners still see their last track (not only a paused queue item).
+ */
+async function fetchPlayback(token: string): Promise<SpotifyPlayback | null> {
+  const h = { Authorization: `Bearer ${token}` };
+
+  try {
+    const [curRes, recRes] = await Promise.all([
+      fetch(CURRENT, { headers: h, cache: "no-store" }),
+      fetch(RECENT, { headers: h, cache: "no-store" })
+    ]);
+
+    const cur =
+      curRes.status === 200
+        ? await readJson<{
+            is_playing?: boolean;
+            item?: PlayableItem | null;
+          }>(curRes)
+        : undefined;
+
+    let recentItem: PlayableItem | null = null;
+    if (recRes.ok) {
+      const rec = await readJson<{
+        items?: { track?: PlayableItem | null }[];
+      }>(recRes);
+      recentItem = rec?.items?.[0]?.track ?? null;
     }
-  }
 
-  if (current.status !== 204 && current.status !== 200) {
-    if (current.status === 401 || current.status === 403) {
-      return {
-        listening: null,
-        issue: "api_error",
-        spotifyStatus: current.status
-      };
+    if (cur?.item && cur.is_playing) {
+      const p = playbackFromItem(cur.item, "now");
+      if (p) return p;
     }
-  }
 
-  const recent = await fetch(RECENT_URL, { headers, cache: "no-store" });
-  if (!recent.ok) {
-    return {
-      listening: null,
-      issue: "api_error",
-      spotifyStatus: recent.status
-    };
-  }
+    if (recentItem) {
+      const p = playbackFromItem(recentItem, "recent");
+      if (p) return p;
+    }
 
-  const recentData = (await recent.json()) as {
-    items?: { track: SpotifyTrack }[];
-  };
-  const track = recentData.items?.[0]?.track;
-  if (!track) {
-    return { listening: null, issue: "no_tracks" };
-  }
+    if (cur?.item) {
+      const p = playbackFromItem(cur.item, "paused");
+      if (p) return p;
+    }
 
-  return { listening: mapTrack(track, false) };
+    return null;
+  } catch {
+    return null;
+  }
 }
 
-async function fetchTopTracks(
-  headers: HeadersInit
-): Promise<{ items: SpotifyTopTrack[]; forbidden: boolean }> {
-  const res = await fetch(TOP_TRACKS_URL, { headers, cache: "no-store" });
-  if (res.status === 403 || res.status === 401) {
-    return { items: [], forbidden: true };
+export async function getSpotifyNowPayload(): Promise<SpotifyNowPayload> {
+  const miss = missingEnv();
+  if (miss.length > 0) {
+    return { ok: false, reason: "setup", missingEnv: miss };
   }
-  if (!res.ok) {
-    return { items: [], forbidden: false };
-  }
-  const data = (await res.json()) as { items?: SpotifyTrack[] };
-  const items = (data.items ?? []).map((t) => ({
-    name: t.name,
-    artists: t.artists.map((a) => a.name).join(", "),
-    url: t.external_urls.spotify,
-    imageUrl: pickImage(t.album?.images)
-  }));
-  return { items, forbidden: false };
-}
 
-async function fetchTopArtists(
-  headers: HeadersInit
-): Promise<{ items: SpotifyTopArtist[]; forbidden: boolean }> {
-  const res = await fetch(TOP_ARTISTS_URL, { headers, cache: "no-store" });
-  if (res.status === 403 || res.status === 401) {
-    return { items: [], forbidden: true };
+  if (playbackPayloadCache && Date.now() < playbackPayloadCache.until) {
+    return playbackPayloadCache.payload;
   }
-  if (!res.ok) {
-    return { items: [], forbidden: false };
-  }
-  const data = (await res.json()) as { items?: SpotifyArtistFull[] };
-  const items = (data.items ?? []).map((a) => ({
-    name: a.name,
-    url: a.external_urls.spotify,
-    imageUrl: pickImage(a.images)
-  }));
-  return { items, forbidden: false };
-}
 
-export async function getSpotifyPayload(): Promise<SpotifyPayload> {
-  if (!spotifyConfigured()) {
+  try {
+    const token = await bearer();
+    if (!token) {
+      playbackPayloadCache = null;
+      return { ok: false, reason: "auth" };
+    }
+    const now = await fetchPlayback(token);
+    const payload: Extract<SpotifyNowPayload, { ok: true }> = {
+      ok: true,
+      now
+    };
+    playbackPayloadCache = {
+      payload,
+      until: Date.now() + PLAYBACK_CACHE_TTL_MS
+    };
+    return payload;
+  } catch (e) {
+    playbackPayloadCache = null;
+    console.error("[spotify]", e);
     return {
-      configured: false,
-      listening: null,
-      topTracks: [],
-      topArtists: [],
-      issue: "missing_env",
-      missingEnvKeys: missingSpotifyEnvKeys()
+      ok: false,
+      reason: "spotify",
+      detail: e instanceof Error ? e.message : undefined
     };
   }
-
-  const { token, status: tokenStatus } = await getAccessToken();
-  if (!token) {
-    return {
-      configured: true,
-      listening: null,
-      topTracks: [],
-      topArtists: [],
-      issue: "refresh_failed",
-      spotifyStatus: tokenStatus || undefined
-    };
-  }
-
-  const headers = { Authorization: `Bearer ${token}` };
-
-  const [listeningResult, topTracksResult, topArtistsResult] = await Promise.all([
-    resolveListening(headers),
-    fetchTopTracks(headers),
-    fetchTopArtists(headers)
-  ]);
-
-  const topDataUnavailable =
-    topTracksResult.forbidden || topArtistsResult.forbidden;
-
-  const base: SpotifyPayload = {
-    configured: true,
-    listening: listeningResult.listening,
-    topTracks: topTracksResult.items,
-    topArtists: topArtistsResult.items,
-    topDataUnavailable: topDataUnavailable || undefined
-  };
-
-  if (listeningResult.issue === "api_error") {
-    return {
-      ...base,
-      issue: "api_error",
-      spotifyStatus: listeningResult.spotifyStatus
-    };
-  }
-
-  if (listeningResult.issue === "no_tracks" && !listeningResult.listening) {
-    return {
-      ...base,
-      listening: null,
-      listeningIssue: "no_tracks"
-    };
-  }
-
-  return base;
 }

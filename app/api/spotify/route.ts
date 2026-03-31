@@ -1,20 +1,10 @@
 import { NextResponse } from "next/server";
-import { getSpotifyPayload } from "@/lib/spotify";
+import { getSpotifyNowPayload } from "@/lib/spotify";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
-  try {
-    const payload = await getSpotifyPayload();
-    return NextResponse.json(payload);
-  } catch {
-    return NextResponse.json(
-      {
-        configured: false,
-        listening: null,
-        topTracks: [],
-        topArtists: [],
-        issue: "server_error" as const
-      },
-      { status: 503 }
-    );
-  }
+  const body = await getSpotifyNowPayload();
+  return NextResponse.json(body);
 }
