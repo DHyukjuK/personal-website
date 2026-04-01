@@ -112,8 +112,7 @@ export default function AcademicsPage() {
         {/* ---- Aside ---- */}
         <RevealOnView delayMs={100}>
           <p className="mt-16 max-w-sm font-serif text-[1.0625rem] italic leading-[1.7] text-foreground/50 md:mt-20">
-            i&apos;ve really enjoyed most of what i&apos;ve taken so far,
-            and i want to keep branching out.
+            trying to take a wider range of things each semester.
           </p>
         </RevealOnView>
 

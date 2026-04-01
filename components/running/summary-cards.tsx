@@ -1,51 +1,34 @@
-import { Card } from "@/components/ui/card";
 import { formatPacePerMile } from "@/lib/utils";
 import type { StravaDashboard } from "@/lib/types";
 
-const cardClass =
-  "border-border/80 p-4 sm:p-5 hover:border-border sm:min-h-[5.75rem]";
-
 export function SummaryCards({ stats }: { stats: StravaDashboard }) {
   const items = [
+    { label: "total miles", value: `${stats.totalDistanceMiles.toFixed(1)}` },
     {
-      label: "Total miles",
-      value: `${stats.totalDistanceMiles.toFixed(1)} mi`
-    },
-    {
-      label: "Average pace",
+      label: "average pace",
       value: formatPacePerMile(stats.averagePacePerMileSeconds)
     },
-    {
-      label: "Runs",
-      value: String(stats.runCount)
-    },
-    {
-      label: "This month",
-      value: `${stats.milesThisMonth.toFixed(1)} mi`
-    },
-    {
-      label: "Avg / week",
-      value: `${stats.avgWeeklyMiles.toFixed(1)} mi`
-    }
+    { label: "runs", value: String(stats.runCount) },
+    { label: "this month", value: `${stats.milesThisMonth.toFixed(1)} mi` },
+    { label: "avg / week", value: `${stats.avgWeeklyMiles.toFixed(1)} mi` }
   ] as const;
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-5">
+    <div>
+      <div className="grid grid-cols-2 gap-x-8 gap-y-8 md:gap-x-12 lg:grid-cols-5">
         {items.map((item) => (
-          <Card key={item.label} className={cardClass}>
-            <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+          <div key={item.label}>
+            <p className="text-[0.625rem] font-medium uppercase tracking-[0.14em] text-muted-foreground/60">
               {item.label}
             </p>
-            <p className="mt-2 font-serif text-xl tracking-tight text-foreground sm:text-2xl">
+            <p className="mt-1.5 font-serif text-2xl tracking-tight text-foreground sm:text-3xl">
               {item.value}
             </p>
-          </Card>
+          </div>
         ))}
       </div>
-      <p className="text-[11px] leading-relaxed text-muted-foreground/90">
-        Totals and averages are from the latest activities pulled from Strava,
-        not lifetime stats.
+      <p className="mt-6 text-[0.6875rem] leading-relaxed text-muted-foreground/50">
+        totals and averages are from the latest activities pulled from strava.
       </p>
     </div>
   );

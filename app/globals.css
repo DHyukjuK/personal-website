@@ -152,6 +152,142 @@ body {
 }
 
 /* -------------------------------------------------------------------------- */
+/* /projects page atmosphere                                                   */
+/* -------------------------------------------------------------------------- */
+
+.projects-atmosphere {
+  background:
+    radial-gradient(
+      ellipse 65% 50% at 85% 5%,
+      hsl(215 38% 87% / 0.5) 0%,
+      transparent 48%
+    ),
+    radial-gradient(
+      ellipse 55% 45% at 15% 80%,
+      hsl(200 30% 89% / 0.35) 0%,
+      transparent 46%
+    ),
+    hsl(var(--background));
+}
+
+.dark .projects-atmosphere {
+  background:
+    radial-gradient(
+      ellipse 65% 50% at 85% 5%,
+      hsl(220 42% 10% / 0.5) 0%,
+      transparent 48%
+    ),
+    radial-gradient(
+      ellipse 55% 45% at 15% 80%,
+      hsl(210 28% 8% / 0.35) 0%,
+      transparent 46%
+    ),
+    hsl(var(--background));
+}
+
+/* -------------------------------------------------------------------------- */
+/* /running page atmosphere                                                    */
+/* -------------------------------------------------------------------------- */
+
+.running-atmosphere {
+  background:
+    radial-gradient(
+      ellipse 70% 55% at 20% 0%,
+      hsl(195 35% 88% / 0.5) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 80% 75%,
+      hsl(170 22% 90% / 0.3) 0%,
+      transparent 45%
+    ),
+    hsl(var(--background));
+}
+
+.dark .running-atmosphere {
+  background:
+    radial-gradient(
+      ellipse 70% 55% at 20% 0%,
+      hsl(200 40% 10% / 0.5) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 80% 75%,
+      hsl(175 28% 8% / 0.3) 0%,
+      transparent 45%
+    ),
+    hsl(var(--background));
+}
+
+/* -------------------------------------------------------------------------- */
+/* /blog page atmosphere                                                       */
+/* -------------------------------------------------------------------------- */
+
+.blog-atmosphere {
+  background:
+    radial-gradient(
+      ellipse 60% 50% at 70% 10%,
+      hsl(220 30% 88% / 0.4) 0%,
+      transparent 48%
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 30% 85%,
+      hsl(210 20% 90% / 0.3) 0%,
+      transparent 44%
+    ),
+    hsl(var(--background));
+}
+
+.dark .blog-atmosphere {
+  background:
+    radial-gradient(
+      ellipse 60% 50% at 70% 10%,
+      hsl(225 35% 10% / 0.4) 0%,
+      transparent 48%
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 30% 85%,
+      hsl(215 25% 7% / 0.3) 0%,
+      transparent 44%
+    ),
+    hsl(var(--background));
+}
+
+/* -------------------------------------------------------------------------- */
+/* Blog post reading atmosphere                                                */
+/* -------------------------------------------------------------------------- */
+
+.blog-post-atmosphere {
+  background:
+    radial-gradient(
+      ellipse 75% 60% at 50% 0%,
+      hsl(215 35% 88% / 0.5) 0%,
+      transparent 52%
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 85% 60%,
+      hsl(200 25% 90% / 0.28) 0%,
+      transparent 46%
+    ),
+    hsl(var(--background));
+}
+
+.dark .blog-post-atmosphere {
+  background:
+    radial-gradient(
+      ellipse 75% 60% at 50% 0%,
+      hsl(220 40% 10% / 0.5) 0%,
+      transparent 52%
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 85% 60%,
+      hsl(210 30% 7% / 0.28) 0%,
+      transparent 46%
+    ),
+    hsl(var(--background));
+}
+
+/* -------------------------------------------------------------------------- */
 /* Homepage atmosphere: layered gradient mesh, drifting orbs, grain, vignette  */
 /* -------------------------------------------------------------------------- */
 

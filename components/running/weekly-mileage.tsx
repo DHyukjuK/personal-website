@@ -1,21 +1,16 @@
-import { Card } from "@/components/ui/card";
 import type { WeeklyMileageBin } from "@/lib/types";
 
 export function WeeklyMileage({ bins }: { bins: WeeklyMileageBin[] }) {
   const maxMiles = Math.max(...bins.map((b) => b.miles), 0.001);
 
   return (
-    <Card className="border-border/80 p-5 sm:p-6 hover:border-border">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-            Recent weeks
-          </p>
-          <p className="mt-1 max-w-md text-sm leading-relaxed text-muted-foreground">
-            Mileage by calendar week (Mon–Sun) from the same Strava snapshot.
-          </p>
-        </div>
-      </div>
+    <div>
+      <p className="text-[0.625rem] font-medium uppercase tracking-[0.14em] text-muted-foreground/60">
+        recent weeks
+      </p>
+      <p className="mt-1 max-w-md text-[0.8125rem] leading-relaxed text-muted-foreground/70">
+        mileage by calendar week from the latest strava snapshot.
+      </p>
       <div className="mt-8 flex gap-2 sm:gap-3">
         {bins.map((bin) => {
           const fill =
@@ -31,8 +26,8 @@ export function WeeklyMileage({ bins }: { bins: WeeklyMileageBin[] }) {
                 <div
                   className={
                     bin.miles <= 0
-                      ? "w-full rounded-sm bg-muted/70"
-                      : "w-full rounded-sm bg-foreground/15 dark:bg-foreground/20"
+                      ? "w-full rounded-t-sm bg-muted/50"
+                      : "w-full rounded-t-sm bg-foreground/12 dark:bg-foreground/18"
                   }
                   style={{ height: `${fill}%` }}
                   title={
@@ -40,16 +35,16 @@ export function WeeklyMileage({ bins }: { bins: WeeklyMileageBin[] }) {
                   }
                 />
               </div>
-              <span className="whitespace-nowrap text-center text-[10px] tabular-nums text-muted-foreground">
+              <span className="whitespace-nowrap text-center text-[0.625rem] tabular-nums text-muted-foreground/60">
                 {bin.label}
               </span>
-              <span className="text-[11px] tabular-nums text-muted-foreground/90">
+              <span className="text-[0.6875rem] tabular-nums text-muted-foreground/80">
                 {bin.miles < 0.05 ? "—" : `${bin.miles.toFixed(1)}`}
               </span>
             </div>
           );
         })}
       </div>
-    </Card>
+    </div>
   );
 }
